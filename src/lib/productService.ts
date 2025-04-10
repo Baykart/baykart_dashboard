@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 import { Product, ProductRating } from '../types/supabase';
 
 export interface ProductInput {

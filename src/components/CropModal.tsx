@@ -4,65 +4,46 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crop, CropInput, getFormattedImageUrl } from "@/lib/cropService";
-import { Category, getCategories } from "@/lib/categoryService";
+import { Crop, CropInput, CROP_CATEGORIES, getFormattedIconUrl } from "@/lib/cropService";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 
 interface CropModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (crop: CropInput, imageFile?: File) => Promise<void>;
+  onSave: (crop: CropInput, iconFile?: File) => Promise<void>;
   crop?: Crop;
   title: string;
 }
 
 export const CropModal = ({ isOpen, onClose, onSave, crop, title }: CropModalProps) => {
   const [name, setName] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [category, setCategory] = useState<string>("");
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categoriesData = await getCategories();
-        setCategories(categoriesData);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load categories",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchCategories();
-  }, [toast]);
-
-  useEffect(() => {
     if (crop) {
       setName(crop.name);
-      setCategoryId(crop.category_id);
-      setImagePreview(crop.image_url ? getFormattedImageUrl(crop.image_url) : null);
+      setCategory(crop.category);
+      setIconPreview(crop.icon_url ? getFormattedIconUrl(crop.icon_url) : null);
     } else {
       setName("");
-      setCategoryId("");
-      setImagePreview(null);
-      setImageFile(null);
+      setCategory("");
+      setIconPreview(null);
+      setIconFile(null);
     }
   }, [crop, isOpen]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      setIconFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setIconPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -80,7 +61,7 @@ export const CropModal = ({ isOpen, onClose, onSave, crop, title }: CropModalPro
       return;
     }
 
-    if (!categoryId) {
+    if (!category) {
       toast({
         title: "Error",
         description: "Category is required",
@@ -94,11 +75,11 @@ export const CropModal = ({ isOpen, onClose, onSave, crop, title }: CropModalPro
     try {
       const cropData: CropInput = {
         name,
-        category_id: categoryId,
-        image_url: crop?.image_url || null,
+        category: category as any, // Type assertion for the enum
+        icon_url: crop?.icon_url || null,
       };
       
-      await onSave(cropData, imageFile || undefined);
+      await onSave(cropData, iconFile || undefined);
       
       toast({
         title: "Success",
@@ -106,11 +87,23 @@ export const CropModal = ({ isOpen, onClose, onSave, crop, title }: CropModalPro
       });
       
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving crop:", error);
+      
+      // Provide more specific error messages
+      let errorMessage = `Failed to ${crop ? "update" : "create"} crop`;
+      
+      if (error.message?.includes("violates row-level security policy")) {
+        errorMessage = "Permission denied. Make sure you're signed in with the correct account.";
+      } else if (error.code === "42501") {
+        errorMessage = "You don't have permission to perform this action.";
+      } else if (error.code === "23505") {
+        errorMessage = "A crop with this name already exists.";
+      }
+      
       toast({
         title: "Error",
-        description: `Failed to ${crop ? "update" : "create"} crop`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -146,45 +139,45 @@ export const CropModal = ({ isOpen, onClose, onSave, crop, title }: CropModalPro
                 Category
               </Label>
               <Select
-                value={categoryId}
-                onValueChange={setCategoryId}
+                value={category}
+                onValueChange={setCategory}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                  {CROP_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1).replace('_', ' ')}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Image
+              <Label htmlFor="icon" className="text-right">
+                Icon
               </Label>
               <div className="col-span-3">
                 <Input
-                  id="image"
+                  id="icon"
                   type="file"
                   accept="image/*"
-                  onChange={handleImageChange}
+                  onChange={handleIconChange}
                   className="mb-2"
                 />
                 <div className="text-xs text-amber-600 flex items-center mt-1 mb-2">
                   <AlertCircle className="h-3 w-3 mr-1" />
-                  Note: Image upload may not work if storage permissions aren't configured.
+                  Note: Icon upload may not work if storage permissions aren't configured.
                 </div>
-                {imagePreview && (
+                {iconPreview && (
                   <div className="mt-2">
                     <img
-                      src={imagePreview}
+                      src={iconPreview}
                       alt="Preview"
                       className="h-20 w-20 object-cover rounded-md"
                       onError={(e) => {
-                        console.log(`Image preview failed to load: ${imagePreview}`);
+                        console.log(`Icon preview failed to load: ${iconPreview}`);
                         e.currentTarget.src = "/placeholder.svg";
                       }}
                     />

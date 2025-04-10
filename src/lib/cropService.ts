@@ -1,7 +1,7 @@
 import { supabase } from './supabase/client';
 
-// Helper function to ensure image URLs are properly formatted
-export const getFormattedImageUrl = (url: string | null): string | null => {
+// Helper function to ensure icon URLs are properly formatted
+export const getFormattedIconUrl = (url: string | null): string | null => {
   if (!url) return null;
   
   // If the URL is already a full URL (starts with http or https), return it as is
@@ -25,18 +25,31 @@ export const getFormattedImageUrl = (url: string | null): string | null => {
   return data.publicUrl;
 };
 
+// Define crop categories as enum
+export const CROP_CATEGORIES = [
+  'grains',
+  'vegetables',
+  'fruits',
+  'legumes',
+  'tubers',
+  'cash_crops',
+  'other'
+] as const;
+
+export type CropCategory = typeof CROP_CATEGORIES[number];
+
 export interface Crop {
   id: string;
   name: string;
-  category_id: string;
-  image_url: string | null;
+  category: CropCategory;
+  icon_url: string | null;
   created_at: string;
 }
 
 export interface CropInput {
   name: string;
-  category_id: string;
-  image_url?: string | null;
+  category: CropCategory;
+  icon_url?: string | null;
 }
 
 // Get all crops
@@ -54,25 +67,22 @@ export const getCrops = async (): Promise<Crop[]> => {
   return data || [];
 };
 
-// Get crops with category information
-export const getCropsWithCategories = async (): Promise<any[]> => {
+// Get crops with formatted URLs
+export const getCropsWithFormattedUrls = async (): Promise<Crop[]> => {
   const { data, error } = await supabase
     .from('crops')
-    .select(`
-      *,
-      crop_categories(name)
-    `)
+    .select('*')
     .order('name');
 
   if (error) {
-    console.error('Error fetching crops with categories:', error);
+    console.error('Error fetching crops:', error);
     throw error;
   }
 
-  // Format image URLs for all crops
+  // Format icon URLs for all crops
   const formattedData = data?.map(crop => ({
     ...crop,
-    image_url: getFormattedImageUrl(crop.image_url)
+    icon_url: getFormattedIconUrl(crop.icon_url)
   })) || [];
 
   return formattedData;
@@ -92,10 +102,10 @@ export const getCropById = async (id: string): Promise<Crop | null> => {
   }
 
   if (data) {
-    // Format the image URL
+    // Format the icon URL
     return {
       ...data,
-      image_url: getFormattedImageUrl(data.image_url)
+      icon_url: getFormattedIconUrl(data.icon_url)
     };
   }
 
@@ -103,13 +113,13 @@ export const getCropById = async (id: string): Promise<Crop | null> => {
 };
 
 // Create a new crop
-export const createCrop = async (crop: CropInput, imageFile?: File): Promise<Crop> => {
-  let imageUrl = crop.image_url;
+export const createCrop = async (crop: CropInput, iconFile?: File): Promise<Crop> => {
+  let iconUrl = crop.icon_url;
 
-  // Upload image if provided
-  if (imageFile) {
+  // Upload icon if provided
+  if (iconFile) {
     try {
-      const fileExt = imageFile.name.split('.').pop();
+      const fileExt = iconFile.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
 
@@ -117,15 +127,15 @@ export const createCrop = async (crop: CropInput, imageFile?: File): Promise<Cro
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.error('Authentication required for image upload');
-        console.warn('Unable to upload image due to authentication. Creating crop without image.');
+        console.error('Authentication required for icon upload');
+        console.warn('Unable to upload icon due to authentication. Creating crop without icon.');
       } else {
         // Get the user ID from the session
         const userId = session.user.id;
         
         const { error: uploadError, data } = await supabase.storage
           .from('crop_images')
-          .upload(`${userId}/${filePath}`, imageFile, {
+          .upload(`${userId}/${filePath}`, iconFile, {
             cacheControl: '3600',
             upsert: true // Changed to true to overwrite if file exists
           });
@@ -133,14 +143,14 @@ export const createCrop = async (crop: CropInput, imageFile?: File): Promise<Cro
         if (uploadError) {
           console.error('Storage upload error details:', uploadError);
           
-          // If bucket doesn't exist or permission denied, just create the crop without the image
+          // If bucket doesn't exist or permission denied, just create the crop without the icon
           if (uploadError.message.includes('bucket') || 
               uploadError.message.includes('policy') || 
               uploadError.message.includes('permission') || 
               uploadError.message.includes('Unauthorized')) {
-            console.warn('Unable to upload image due to storage permissions. Creating crop without image.');
+            console.warn('Unable to upload icon due to storage permissions. Creating crop without icon.');
           } else {
-            console.error('Error uploading image:', uploadError);
+            console.error('Error uploading icon:', uploadError);
             throw uploadError;
           }
         } else {
@@ -149,20 +159,20 @@ export const createCrop = async (crop: CropInput, imageFile?: File): Promise<Cro
             .from('crop_images')
             .getPublicUrl(`${userId}/${filePath}`);
 
-          imageUrl = publicUrlData.publicUrl;
+          iconUrl = publicUrlData.publicUrl;
         }
       }
     } catch (error) {
       // Log error but continue with crop creation
-      console.error('Error handling image upload:', error);
-      console.warn('Continuing with crop creation without image.');
+      console.error('Error handling icon upload:', error);
+      console.warn('Continuing with crop creation without icon.');
     }
   }
 
-  // Create crop with image URL (or null if upload failed)
+  // Create crop with icon URL (or null if upload failed)
   const { data, error } = await supabase
     .from('crops')
-    .insert([{ ...crop, image_url: imageUrl }])
+    .insert([{ ...crop, icon_url: iconUrl }])
     .select()
     .single();
 
@@ -175,13 +185,13 @@ export const createCrop = async (crop: CropInput, imageFile?: File): Promise<Cro
 };
 
 // Update an existing crop
-export const updateCrop = async (id: string, crop: CropInput, imageFile?: File): Promise<Crop> => {
-  let imageUrl = crop.image_url;
+export const updateCrop = async (id: string, crop: CropInput, iconFile?: File): Promise<Crop> => {
+  let iconUrl = crop.icon_url;
 
-  // Upload new image if provided
-  if (imageFile) {
+  // Upload new icon if provided
+  if (iconFile) {
     try {
-      const fileExt = imageFile.name.split('.').pop();
+      const fileExt = iconFile.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
 
@@ -189,15 +199,15 @@ export const updateCrop = async (id: string, crop: CropInput, imageFile?: File):
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.error('Authentication required for image upload');
-        console.warn('Unable to upload image due to authentication. Updating crop without new image.');
+        console.error('Authentication required for icon upload');
+        console.warn('Unable to upload icon due to authentication. Updating crop without new icon.');
       } else {
         // Get the user ID from the session
         const userId = session.user.id;
         
         const { error: uploadError, data } = await supabase.storage
           .from('crop_images')
-          .upload(`${userId}/${filePath}`, imageFile, {
+          .upload(`${userId}/${filePath}`, iconFile, {
             cacheControl: '3600',
             upsert: true
           });
@@ -205,14 +215,14 @@ export const updateCrop = async (id: string, crop: CropInput, imageFile?: File):
         if (uploadError) {
           console.error('Storage upload error details:', uploadError);
           
-          // If bucket doesn't exist or permission denied, just update the crop without the image
+          // If bucket doesn't exist or permission denied, just update the crop without the icon
           if (uploadError.message.includes('bucket') || 
               uploadError.message.includes('policy') || 
               uploadError.message.includes('permission') || 
               uploadError.message.includes('Unauthorized')) {
-            console.warn('Unable to upload image due to storage permissions. Updating crop without new image.');
+            console.warn('Unable to upload icon due to storage permissions. Updating crop without new icon.');
           } else {
-            console.error('Error uploading image:', uploadError);
+            console.error('Error uploading icon:', uploadError);
             throw uploadError;
           }
         } else {
@@ -221,20 +231,20 @@ export const updateCrop = async (id: string, crop: CropInput, imageFile?: File):
             .from('crop_images')
             .getPublicUrl(`${userId}/${filePath}`);
 
-          imageUrl = publicUrlData.publicUrl;
+          iconUrl = publicUrlData.publicUrl;
         }
       }
     } catch (error) {
       // Log error but continue with crop update
-      console.error('Error handling image upload:', error);
-      console.warn('Continuing with crop update without new image.');
+      console.error('Error handling icon upload:', error);
+      console.warn('Continuing with crop update without new icon.');
     }
   }
 
   // Update crop with new data
   const { data, error } = await supabase
     .from('crops')
-    .update({ ...crop, image_url: imageUrl })
+    .update({ ...crop, icon_url: iconUrl })
     .eq('id', id)
     .select()
     .single();
@@ -249,10 +259,6 @@ export const updateCrop = async (id: string, crop: CropInput, imageFile?: File):
 
 // Delete a crop
 export const deleteCrop = async (id: string): Promise<void> => {
-  // First get the crop to find the image URL
-  const crop = await getCropById(id);
-  
-  // Delete the record
   const { error } = await supabase
     .from('crops')
     .delete()
@@ -261,37 +267,5 @@ export const deleteCrop = async (id: string): Promise<void> => {
   if (error) {
     console.error(`Error deleting crop with ID ${id}:`, error);
     throw error;
-  }
-
-  // If there was an image and it was stored in our bucket, try to delete it
-  if (crop?.image_url) {
-    try {
-      // Check if the URL contains our bucket name to ensure it's from our storage
-      if (crop.image_url.includes('crop_images')) {
-        const imagePath = crop.image_url.split('/').pop();
-        if (imagePath) {
-          // Check if user is authenticated before delete
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (!session) {
-            console.warn('Authentication required for image deletion. Image file may remain in storage.');
-          } else {
-            const { error: storageError } = await supabase.storage
-              .from('crop_images')
-              .remove([imagePath]);
-              
-            if (storageError) {
-              // Just log the error but don't throw - the crop record is already deleted
-              console.error('Error deleting image from storage:', storageError);
-              console.warn('Crop record deleted but image file may remain in storage.');
-            }
-          }
-        }
-      } else {
-        console.log('Image URL not from our storage bucket, skipping file deletion');
-      }
-    } catch (err) {
-      console.error('Error parsing image URL for deletion:', err);
-    }
   }
 }; 

@@ -10,23 +10,17 @@ import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog"
 import { 
   Crop, 
   CropInput, 
-  getCropsWithCategories, 
+  getCropsWithFormattedUrls, 
   createCrop, 
   updateCrop, 
   deleteCrop,
-  getFormattedImageUrl
+  getFormattedIconUrl
 } from "@/lib/cropService";
 import { supabase } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-interface CropWithCategory extends Crop {
-  crop_categories: {
-    name: string;
-  };
-}
-
 const Crops = () => {
-  const [crops, setCrops] = useState<CropWithCategory[]>([]);
+  const [crops, setCrops] = useState<Crop[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,7 +60,7 @@ const Crops = () => {
   const fetchCrops = async () => {
     setIsLoading(true);
     try {
-      const data = await getCropsWithCategories();
+      const data = await getCropsWithFormattedUrls();
       setCrops(data);
     } catch (error) {
       console.error("Error fetching crops:", error);
@@ -127,7 +121,7 @@ const Crops = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSaveCrop = async (cropData: CropInput, imageFile?: File) => {
+  const handleSaveCrop = async (cropData: CropInput, iconFile?: File) => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -141,14 +135,14 @@ const Crops = () => {
     try {
       if (selectedCrop) {
         // Update existing crop
-        await updateCrop(selectedCrop.id, cropData, imageFile);
+        await updateCrop(selectedCrop.id, cropData, iconFile);
         toast({
           title: "Success",
           description: "Crop updated successfully",
         });
       } else {
         // Create new crop
-        await createCrop(cropData, imageFile);
+        await createCrop(cropData, iconFile);
         toast({
           title: "Success",
           description: "Crop created successfully",
@@ -223,6 +217,11 @@ const Crops = () => {
     }
   };
 
+  // Format category for display
+  const formatCategory = (category: string) => {
+    return category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
@@ -265,7 +264,7 @@ const Crops = () => {
                       Crop
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Image
+                      Icon
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
@@ -296,17 +295,17 @@ const Crops = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <img
-                            src={getFormattedImageUrl(crop.image_url) || "/placeholder.svg"}
+                            src={getFormattedIconUrl(crop.icon_url) || "/placeholder.svg"}
                             alt={crop.name}
                             className="h-10 w-10 rounded-full object-cover"
                             onError={(e) => {
-                              console.log(`Image failed to load: ${crop.image_url}`);
+                              console.log(`Icon failed to load: ${crop.icon_url}`);
                               e.currentTarget.src = "/placeholder.svg";
                             }}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {crop.crop_categories?.name || "Unknown"}
+                          {formatCategory(crop.category)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex space-x-2">
