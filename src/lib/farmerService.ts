@@ -1,4 +1,4 @@
-import { supabase } from './supabase/client';
+import { supabase } from './supabase';
 
 export interface Farmer {
   id: string;

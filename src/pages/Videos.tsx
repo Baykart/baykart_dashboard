@@ -42,7 +42,7 @@ export function Videos() {
     setError(null);
     try {
       const data = await videoService.getVideos();
-      setVideos(data);
+      setVideos(data.results); // Fix: use results array from paginated response
     } catch (err) {
       setError('Failed to fetch videos');
       console.error(err);

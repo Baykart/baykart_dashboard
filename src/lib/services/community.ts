@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client'
+import { supabase } from '../supabase';
 
 export interface CommunityChannel {
   id: string  // Changed from number to string as per schema (UUID)

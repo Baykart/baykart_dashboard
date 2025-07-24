@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase';
 import { Feed, CreateFeedInput, AgriServiceCategory } from '@/types/feeds'
 
 export async function getFeeds(): Promise<Feed[]> {

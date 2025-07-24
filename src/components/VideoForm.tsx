@@ -32,7 +32,9 @@ export function VideoForm({ video, onSubmit, isLoading }: VideoFormProps) {
     duration: video?.duration || 0,
     is_livestream: video?.is_livestream || false,
     category: video?.category || '',
-    tags: video?.tags?.join(', ') || '',
+    tags: Array.isArray(video?.tags)
+      ? video.tags.join(', ')
+      : (typeof video?.tags === 'string' ? video.tags : ''),
   });
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -443,12 +445,40 @@ export function VideoForm({ video, onSubmit, isLoading }: VideoFormProps) {
         thumbnail_url = await videoService.uploadThumbnail(thumbnailFile);
       }
 
+      // Map UI values to backend enum values
+      const categoryMap: Record<string, string> = {
+        'Agriculture': 'farming',
+        'Farming Techniques': 'farming',
+        'Crop Management': 'farming',
+        'Livestock': 'farming',
+        'Equipment': 'farming',
+        'Market Updates': 'market',
+        'Weather': 'other',
+        'Tutorial': 'education',
+        'News': 'news',
+        'Interview': 'other',
+        'Other': 'other',
+      };
+      const sourceMap: Record<string, string> = {
+        'YouTube': 'youtube',
+        'Vimeo': 'external',
+        'Facebook': 'external',
+        'Instagram': 'external',
+        'TikTok': 'external',
+        'Original Content': 'upload',
+        'Partner Content': 'external',
+        'Other': 'external',
+      };
+
       const data = {
         ...formData,
         video_url,
         thumbnail_url,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        // tags as comma-separated string
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean).join(','),
         duration: Number(formData.duration) || null,
+        category: categoryMap[formData.category] || 'other',
+        source: sourceMap[formData.source] || 'external',
       };
 
       await onSubmit(data);

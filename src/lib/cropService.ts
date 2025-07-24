@@ -1,4 +1,4 @@
-import { supabase } from './supabase/client';
+import { supabase } from './supabase';
 
 // Helper function to ensure icon URLs are properly formatted
 export const getFormattedIconUrl = (url: string | null): string | null => {

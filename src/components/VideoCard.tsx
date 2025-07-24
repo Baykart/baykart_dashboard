@@ -88,7 +88,7 @@ const VideoCard = ({ video, onEdit, onDelete }: VideoCardProps) => {
       
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-bold line-clamp-2">{video.title}</CardTitle>
-        <CardDescription className="flex items-center text-sm">
+        <div className="flex items-center text-sm">
           {video.source}
           {video.category && (
             <>
@@ -96,7 +96,7 @@ const VideoCard = ({ video, onEdit, onDelete }: VideoCardProps) => {
               <Badge variant="outline">{video.category}</Badge>
             </>
           )}
-        </CardDescription>
+        </div>
       </CardHeader>
       
       <CardContent className="pb-2 flex-grow">
@@ -117,17 +117,16 @@ const VideoCard = ({ video, onEdit, onDelete }: VideoCardProps) => {
         )}
       </CardContent>
       
-      <CardFooter className="pt-2 flex justify-between">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setShowVideoDialog(true)}
-        >
-          <Play className="h-4 w-4 mr-1" />
-          Watch
-        </Button>
-        
-        <div className="flex space-x-2">
+      <CardFooter className="pt-2 flex flex-col gap-2 items-stretch">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowVideoDialog(true)}
+          >
+            <Play className="h-4 w-4 mr-1" />
+            Watch
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -136,36 +135,36 @@ const VideoCard = ({ video, onEdit, onDelete }: VideoCardProps) => {
             <Edit className="h-4 w-4 mr-1" />
             Edit
           </Button>
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant="destructive" 
-                size="sm"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete the video "{video.title}". This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              className="w-full"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the video "{video.title}". This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
       
       <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
