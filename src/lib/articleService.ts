@@ -1,180 +1,60 @@
-import { supabase } from './supabase';
 import type { Article, CreateArticleDTO, UpdateArticleDTO } from './types';
 
-const BUCKET_NAME = 'news_images';
-
-const processBase64Image = async (base64String: string) => {
-  // Extract the actual base64 data from the data URL
-  const base64Data = base64String.split(',')[1];
-  // Convert base64 to blob
-  const byteCharacters = atob(base64Data);
-  const byteArrays = [];
-  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-    const slice = byteCharacters.slice(offset, offset + 512);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
-  }
-  return new Blob(byteArrays, { type: 'image/jpeg' });
-};
+const API_URL = 'http://localhost:8000/api/v1/content/news_articles/';
 
 export const articleService = {
-  async getArticles() {
-    const { data, error } = await supabase
-      .from('news_articles')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data as Article[];
+  async getArticles(page = 1, pageSize = 10) {
+    const url = new URL(API_URL);
+    url.searchParams.append('page', String(page));
+    url.searchParams.append('page_size', String(pageSize));
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('Failed to fetch articles');
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      return { results: data, count: data.length, next: null, previous: null };
+    }
+    if (Array.isArray(data.results)) {
+      return {
+        results: data.results,
+        count: data.count,
+        next: data.next,
+        previous: data.previous,
+      };
+    }
+    return { results: [], count: 0, next: null, previous: null };
   },
 
   async getArticleById(id: string) {
-    const { data, error } = await supabase
-      .from('news_articles')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data as Article;
+    const res = await fetch(`${API_URL}${id}/`);
+    if (!res.ok) throw new Error('Failed to fetch article');
+    return await res.json();
   },
 
   async createArticle(article: CreateArticleDTO) {
-    let image_url = article.image_url;
-
-    if (image_url && image_url.startsWith('data:')) {
-      try {
-        // Generate a unique filename
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-        
-        // Convert base64 to blob
-        const blob = await processBase64Image(image_url);
-
-        // Upload the image
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET_NAME)
-          .upload(fileName, blob, {
-            contentType: 'image/jpeg',
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-        
-        // Get the public URL
-        const { data } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(fileName);
-        
-        image_url = data.publicUrl;
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        throw error;
-      }
-    }
-
-    const { data, error } = await supabase
-      .from('news_articles')
-      .insert([{ ...article, image_url }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as Article;
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(article),
+    });
+    if (!res.ok) throw new Error('Failed to create article');
+    return await res.json();
   },
 
   async updateArticle(id: string, article: UpdateArticleDTO) {
-    let image_url = article.image_url;
-
-    if (image_url && image_url.startsWith('data:')) {
-      try {
-        // Delete old image if exists
-        const { data: oldArticle } = await supabase
-          .from('news_articles')
-          .select('image_url')
-          .eq('id', id)
-          .single();
-
-        if (oldArticle?.image_url) {
-          const oldFileName = oldArticle.image_url.split('/').pop();
-          if (oldFileName) {
-            await supabase.storage
-              .from(BUCKET_NAME)
-              .remove([oldFileName]);
-          }
-        }
-
-        // Generate a unique filename
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-        
-        // Convert base64 to blob
-        const blob = await processBase64Image(image_url);
-
-        // Upload the new image
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET_NAME)
-          .upload(fileName, blob, {
-            contentType: 'image/jpeg',
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-        
-        // Get the public URL
-        const { data } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(fileName);
-        
-        image_url = data.publicUrl;
-      } catch (error) {
-        console.error('Error updating image:', error);
-        throw error;
-      }
-    }
-
-    const { data, error } = await supabase
-      .from('news_articles')
-      .update({ ...article, image_url })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as Article;
+    const res = await fetch(`${API_URL}${id}/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(article),
+    });
+    if (!res.ok) throw new Error('Failed to update article');
+    return await res.json();
   },
 
   async deleteArticle(id: string) {
-    try {
-      // Get the article to delete its image if exists
-      const { data: article } = await supabase
-        .from('news_articles')
-        .select('image_url')
-        .eq('id', id)
-        .single();
-
-      if (article?.image_url) {
-        const fileName = article.image_url.split('/').pop();
-        if (fileName) {
-          await supabase.storage
-            .from(BUCKET_NAME)
-            .remove([fileName]);
-        }
-      }
-
-      const { error } = await supabase
-        .from('news_articles')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting article:', error);
-      throw error;
-    }
-  }
+    const res = await fetch(`${API_URL}${id}/`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete article');
+    return true;
+  },
 }; 

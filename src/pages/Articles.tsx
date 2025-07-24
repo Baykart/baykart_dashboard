@@ -13,16 +13,19 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 
 export function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [pagination, setPagination] = useState({ count: 0, next: null as string | null, previous: null as string | null, page: 1, pageSize: 10 });
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  const loadArticles = async () => {
+  const loadArticles = async (page = 1, pageSize = 10) => {
     try {
-      const data = await articleService.getArticles();
-      setArticles(data);
+      const { results, count, next, previous } = await articleService.getArticles(page, pageSize);
+      setArticles(Array.isArray(results) ? results : []);
+      setPagination({ count, next, previous, page, pageSize });
     } catch (error) {
+      setArticles([]);
       toast({
         title: 'Error',
         description: 'Failed to load articles',
@@ -32,8 +35,9 @@ export function Articles() {
   };
 
   useEffect(() => {
-    loadArticles();
-  }, []);
+    loadArticles(pagination.page, pagination.pageSize);
+    // eslint-disable-next-line
+  }, [pagination.page, pagination.pageSize]);
 
   const filteredArticles = articles.filter((article) =>
     article.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,11 +45,15 @@ export function Articles() {
     article.content.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handlePageChange = (newPage: number) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+  };
+
   const handleCreate = async (data: any) => {
     setIsLoading(true);
     try {
       await articleService.createArticle(data);
-      await loadArticles();
+      await loadArticles(pagination.page, pagination.pageSize);
       setIsDialogOpen(false);
       toast({
         title: 'Success',
@@ -67,7 +75,7 @@ export function Articles() {
     setIsLoading(true);
     try {
       await articleService.updateArticle(selectedArticle.id, data);
-      await loadArticles();
+      await loadArticles(pagination.page, pagination.pageSize);
       setIsDialogOpen(false);
       setSelectedArticle(null);
       toast({
@@ -89,7 +97,7 @@ export function Articles() {
     if (!confirm('Are you sure you want to delete this article?')) return;
     try {
       await articleService.deleteArticle(article.id);
-      await loadArticles();
+      await loadArticles(pagination.page, pagination.pageSize);
       toast({
         title: 'Success',
         description: 'Article deleted successfully',
@@ -102,6 +110,9 @@ export function Articles() {
       });
     }
   };
+
+  // Pagination controls
+  const totalPages = Math.ceil(pagination.count / pagination.pageSize);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -184,6 +195,27 @@ export function Articles() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination.page === 1}
+                onClick={() => handlePageChange(pagination.page - 1)}
+              >
+                Previous
+              </Button>
+              <span>Page {pagination.page} of {totalPages || 1}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination.page === totalPages || totalPages === 0}
+                onClick={() => handlePageChange(pagination.page + 1)}
+              >
+                Next
+              </Button>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
