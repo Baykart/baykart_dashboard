@@ -1,4 +1,4 @@
-import { Home, Grid, Leaf, Coffee, Users, Settings, Menu, FileText, UsersRound, Tag, Calendar, Film, FileBarChart, ShoppingBag, Sprout } from "lucide-react";
+import { Home, Grid, Leaf, Coffee, Users, Settings, Menu, FileText, UsersRound, Tag, Calendar, Film, FileBarChart, ShoppingBag, Sprout, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -11,6 +11,7 @@ const navigation = [
   { name: "Farmers", href: "/farmers", icon: Users },
   { name: "Government Schemes", href: "/government-schemes", icon: FileBarChart },
   { name: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+  { name: "Market Prices", href: "/market-prices", icon: TrendingUp },
   { name: "Crop Care", href: "/crop-care", icon: Sprout },
   { name: "Coupons", href: "/coupons", icon: Tag },
   { name: "Events", href: "/events", icon: Calendar },
