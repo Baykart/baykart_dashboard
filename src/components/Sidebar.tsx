@@ -1,6 +1,6 @@
 import { Home, Grid, Leaf, Coffee, Users, Settings, Menu, FileText, UsersRound, Tag, Calendar, Film, FileBarChart, ShoppingBag, Sprout } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const navigation = [
@@ -104,6 +104,40 @@ export function Sidebar() {
                 </Link>
               );
             })}
+            <NavLink
+              to="/feeds"
+              className={cn(
+                "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 hover-scale",
+                location.pathname === "/feeds"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-gray-600 hover:bg-gray-50"
+              )}
+            >
+              <Coffee className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400" />
+              <span className={cn(
+                "transition-opacity duration-200",
+                !isOpen && "md:opacity-0"
+              )}>
+                Feeds
+              </span>
+            </NavLink>
+            <NavLink
+              to="/feed_reports"
+              className={cn(
+                "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 hover-scale",
+                location.pathname === "/feed_reports"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-gray-600 hover:bg-gray-50"
+              )}
+            >
+              <FileBarChart className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400" />
+              <span className={cn(
+                "transition-opacity duration-200",
+                !isOpen && "md:opacity-0"
+              )}>
+                Feed Reports
+              </span>
+            </NavLink>
           </nav>
         </div>
       </div>

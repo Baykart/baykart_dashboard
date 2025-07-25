@@ -22,6 +22,7 @@ import GovernmentSchemes from "./pages/GovernmentSchemes";
 import Marketplace from "./pages/Marketplace";
 import CropCare from "./pages/CropCare";
 import { Agriservices } from "./pages/Agriservices";
+import FeedReports from "./pages/FeedReports";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/categories" element={<Categories />} />
               <Route path="/crops" element={<Crops />} />
               <Route path="/feeds" element={<Feeds />} />
+              <Route path="/feed_reports" element={<FeedReports />} />
               <Route path="/farmers" element={<Farmers />} />
               <Route path="/government-schemes" element={<GovernmentSchemes />} />
               <Route path="/marketplace" element={<Marketplace />} />
