@@ -9,12 +9,20 @@ export interface Feed {
 }
 
 export interface AgriService {
-  id: number;
+  id: string;
   name: string;
+  category: string;
   description: string;
-  category: AgriServiceCategory;
-  price: number;
-  isAvailable: boolean;
+  location: string;
+  coverage_area: string;
+  contact_info: string;
+  pricing_notes?: string;
+  availability?: string;
+  image_url?: string | null;
+  is_active: boolean;
+  is_verified: boolean;
+  date_submitted: string;
+  submitted_by?: string | null;
 }
 
 export interface AgriServiceCategory {

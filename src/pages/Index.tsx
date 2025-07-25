@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartBar, Users, Grid, Download } from "lucide-react";
+import { Link } from 'react-router-dom';
 
 const statsData = [
   {
@@ -126,6 +127,9 @@ const Index = () => {
                 </CardContent>
               </Card>
             </div>
+            <Link to="/agriservices" className="block p-4 bg-white rounded shadow hover:bg-gray-50 mb-2">
+              Agri Services
+            </Link>
           </div>
         </main>
       </div>

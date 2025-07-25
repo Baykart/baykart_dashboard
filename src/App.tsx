@@ -21,6 +21,7 @@ import { Videos } from "./pages/Videos";
 import GovernmentSchemes from "./pages/GovernmentSchemes";
 import Marketplace from "./pages/Marketplace";
 import CropCare from "./pages/CropCare";
+import { Agriservices } from "./pages/Agriservices";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/videos" element={<Videos />} />
               <Route path="/articles" element={<Articles />} />
               <Route path="/groups" element={<CommunityChannels />} />
+              <Route path="/agriservices" element={<Agriservices />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             

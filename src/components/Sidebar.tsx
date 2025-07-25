@@ -18,6 +18,7 @@ const navigation = [
   { name: "Articles", href: "/articles", icon: FileText },
   { name: "Community Channels", href: "/groups", icon: UsersRound },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Agri Services", href: "/agriservices", icon: UsersRound },
 ];
 
 export function Sidebar() {
