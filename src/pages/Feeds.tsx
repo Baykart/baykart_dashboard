@@ -26,9 +26,11 @@ export default function Feeds() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPosts(1, true);
+    if (accessToken) {
+      fetchPosts(1, true);
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
     // Get access token on mount and when user changes

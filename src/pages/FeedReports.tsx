@@ -3,33 +3,51 @@ import { FeedReport, FeedPost, FeedReportReason } from '@/types/feeds';
 import { useUser } from '@/lib/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const REPORTS_API = '/api/feeds/reports/';
 const POSTS_API = '/api/feeds/posts/';
+const ME_API = '/api/auth/me/';
 
 export default function FeedReports() {
   const { user } = useUser();
   const [reports, setReports] = useState<FeedReport[]>([]);
   const [posts, setPosts] = useState<{ [id: number]: FeedPost }>({});
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.role !== 'admin') return;
-    fetchReports();
+    async function fetchMeAndReports() {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      setAccessToken(token || null);
+      if (!token) return;
+      // Fetch Django profile
+      const meRes = await fetch(ME_API, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (meRes.ok) {
+        const me = await meRes.json();
+        setIsAdmin(!!me.is_staff || !!me.is_superuser);
+        if (!!me.is_staff || !!me.is_superuser) fetchReports(token);
+      }
+    }
+    fetchMeAndReports();
     // eslint-disable-next-line
   }, [user]);
 
-  async function fetchReports() {
+  async function fetchReports(token: string) {
     setLoading(true);
     try {
       const res = await fetch(REPORTS_API, {
-        headers: { Authorization: `Bearer ${user?.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setReports(data.results || data);
       // Fetch posts for each report
       for (const report of data.results || data) {
-        if (!posts[report.post]) fetchPost(report.post);
+        if (!posts[report.post]) fetchPost(report.post, token);
       }
     } catch (e) {
       toast({ title: 'Error loading reports' });
@@ -38,9 +56,9 @@ export default function FeedReports() {
     }
   }
 
-  async function fetchPost(postId: number) {
+  async function fetchPost(postId: number, token: string) {
     const res = await fetch(`${POSTS_API}${postId}/`, {
-      headers: { Authorization: `Bearer ${user?.access_token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const post = await res.json();
@@ -49,39 +67,42 @@ export default function FeedReports() {
   }
 
   async function handleResolve(reportId: number) {
+    if (!accessToken) return;
     const res = await fetch(`${REPORTS_API}${reportId}/resolve/`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${user?.access_token}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) {
       toast({ title: 'Report resolved' });
-      fetchReports();
+      fetchReports(accessToken);
     }
   }
 
   async function handleDeletePost(reportId: number) {
+    if (!accessToken) return;
     const res = await fetch(`${REPORTS_API}${reportId}/delete_post/`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${user?.access_token}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) {
       toast({ title: 'Post deleted' });
-      fetchReports();
+      fetchReports(accessToken);
     }
   }
 
   async function handleBanUser(reportId: number) {
+    if (!accessToken) return;
     const res = await fetch(`${REPORTS_API}${reportId}/ban_user/`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${user?.access_token}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) {
       toast({ title: 'User banned' });
-      fetchReports();
+      fetchReports(accessToken);
     }
   }
 
-  if (user?.role !== 'admin') {
+  if (!isAdmin) {
     return <div className="container mx-auto py-6"><h1 className="text-2xl font-bold">Feed Reports</h1><p>Access denied.</p></div>;
   }
 

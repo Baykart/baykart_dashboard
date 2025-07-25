@@ -230,6 +230,7 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
       if (event) {
         await updateEvent(event.id, formData, imageFile || undefined);
       } else {
+        console.log('Submitting event:', formData); // Debug log
         await createEvent(formData, imageFile || undefined);
       }
 
