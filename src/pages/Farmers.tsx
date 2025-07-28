@@ -160,7 +160,7 @@ export default function Farmers() {
       setIsEditDialogOpen(false);
       setEditingFarmer(null);
       fetchFarmers();
-    } catch (error) {
+      } catch (error) {
       console.error('Error updating farmer:', error);
       toast.error('Failed to update farmer');
     }
@@ -526,15 +526,15 @@ export default function Farmers() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredFarmers.map((farmer) => (
+                  {filteredFarmers.map((farmer) => (
                         <TableRow key={farmer.id}>
                           <TableCell>
                             <div className="flex items-center space-x-3">
                               <Avatar className="w-10 h-10">
                                 <AvatarImage src={farmer.profile_picture || ''} alt={farmer.full_name} />
                                 <AvatarFallback>{farmer.full_name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
+                            </Avatar>
+                            <div>
                                 <div className="font-medium">{farmer.full_name}</div>
                                 <div className="text-sm text-gray-500">{farmer.user_email}</div>
                               </div>
@@ -580,25 +580,25 @@ export default function Farmers() {
                               {farmer.age && (
                                 <div className="text-sm text-gray-500">Age: {farmer.age}</div>
                               )}
-                            </div>
+                          </div>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm text-gray-500">
-                              {new Date(farmer.created_at).toLocaleDateString()}
+                          {new Date(farmer.created_at).toLocaleDateString()}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
+                          <Button
+                            variant="outline"
+                            size="sm"
                                 onClick={() => handleView(farmer)}
-                              >
+                          >
                                 <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                                 onClick={() => handleEdit(farmer)}
                               >
                                 <Edit className="w-4 h-4" />
@@ -619,12 +619,12 @@ export default function Farmers() {
                                   <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => handleDelete(farmer.id)}>
-                                      Delete
+                            Delete
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
-                            </div>
+                        </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -659,8 +659,8 @@ export default function Farmers() {
                         onChange={(e) => setEditFormData({ ...editFormData, last_name: e.target.value })}
                         required
                       />
-                    </div>
-                  </div>
+              </div>
+            </div>
 
                   <div>
                     <Label htmlFor="edit_phone_number">Phone Number</Label>
@@ -670,54 +670,54 @@ export default function Farmers() {
                       onChange={(e) => setEditFormData({ ...editFormData, phone_number: e.target.value })}
                       required
                     />
-                  </div>
+          </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="edit_region">Region</Label>
-                      <Input
+                <Input
                         id="edit_region"
                         value={editFormData.region}
                         onChange={(e) => setEditFormData({ ...editFormData, region: e.target.value })}
-                        required
-                      />
-                    </div>
+                  required
+                />
+              </div>
                     <div>
                       <Label htmlFor="edit_district">District</Label>
-                      <Input
+                <Input
                         id="edit_district"
                         value={editFormData.district}
                         onChange={(e) => setEditFormData({ ...editFormData, district: e.target.value })}
-                        required
-                      />
-                    </div>
+                  required
+                />
+              </div>
                     <div>
                       <Label htmlFor="edit_village">Village</Label>
-                      <Input
+                  <Input
                         id="edit_village"
                         value={editFormData.village}
                         onChange={(e) => setEditFormData({ ...editFormData, village: e.target.value })}
                         required
-                      />
-                    </div>
+                  />
+                </div>
                   </div>
 
                   <div>
                     <Label htmlFor="edit_address">Address</Label>
-                    <Input
+                  <Input
                       id="edit_address"
                       value={editFormData.address}
                       onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
                       required
-                    />
-                  </div>
+                  />
+                </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="edit_years_of_farming">Years of Farming</Label>
-                      <Input
+                  <Input
                         id="edit_years_of_farming"
-                        type="number"
+                    type="number"
                         value={editFormData.years_of_farming}
                         onChange={(e) => setEditFormData({ ...editFormData, years_of_farming: parseInt(e.target.value) || 0 })}
                         required
@@ -726,18 +726,18 @@ export default function Farmers() {
                     <div>
                       <Label htmlFor="edit_education_level">Education Level</Label>
                       <Select value={editFormData.education_level} onValueChange={(value) => setEditFormData({ ...editFormData, education_level: value })}>
-                        <SelectTrigger>
+                    <SelectTrigger>
                           <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
+                    </SelectTrigger>
+                    <SelectContent>
                           <SelectItem value="none">No Formal Education</SelectItem>
                           <SelectItem value="primary">Primary School</SelectItem>
                           <SelectItem value="secondary">Secondary School</SelectItem>
                           <SelectItem value="tertiary">Tertiary Education</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    </SelectContent>
+                  </Select>
+                </div>
                   </div>
 
                   <div>
@@ -753,7 +753,7 @@ export default function Farmers() {
 
                   <div>
                     <Label htmlFor="edit_bio">Bio</Label>
-                    <Input
+                <Input
                       id="edit_bio"
                       value={editFormData.bio}
                       onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
@@ -778,18 +778,18 @@ export default function Farmers() {
                         onChange={(e) => setEditFormData({ ...editFormData, is_active: e.target.checked })}
                       />
                       <Label htmlFor="edit_is_active">Active</Label>
-                    </div>
-                  </div>
+              </div>
+            </div>
 
-                  <DialogFooter>
+            <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                      Cancel
-                    </Button>
+                  Cancel
+                </Button>
                     <Button type="submit">Save Changes</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
             {/* View Dialog */}
             <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>

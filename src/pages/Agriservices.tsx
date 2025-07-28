@@ -448,7 +448,7 @@ const AgriServices = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Service Name</Label>
-                    <Input
+                  <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -562,7 +562,7 @@ const AgriServices = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="edit-name">Service Name</Label>
-                    <Input
+                  <Input
                       id="edit-name"
                       value={editFormData.name}
                       onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
@@ -631,7 +631,7 @@ const AgriServices = () => {
                   </div>
                   <div>
                     <Label htmlFor="edit-pricing_notes">Pricing Notes</Label>
-                    <Input
+                  <Input
                       id="edit-pricing_notes"
                       value={editFormData.pricing_notes}
                       onChange={(e) => setEditFormData({...editFormData, pricing_notes: e.target.value})}
@@ -733,15 +733,15 @@ const AgriServices = () => {
                   </div>
                   <div className="text-xs text-gray-500">
                     Submitted by: {viewingService.submitted_by_name} on {new Date(viewingService.date_submitted).toLocaleDateString()}
-                  </div>
+                </div>
                 </div>
               )}
               <DialogFooter>
                 <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+                </DialogContent>
+              </Dialog>
+          </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileBarChart, Calendar, Users, TrendingUp, Shield, Award, Building2, Globe, Search } from "lucide-react";
 
 const GovernmentSchemes = () => {
-  return (
+        return (
     <div className="flex h-screen">
       <Sidebar />
       <div className="flex-1 flex flex-col">
@@ -70,7 +70,7 @@ const GovernmentSchemes = () => {
                 <CardHeader>
                   <div className="flex justify-center mb-2">
                     <TrendingUp className="h-6 w-6 text-orange-600" />
-                  </div>
+              </div>
                   <CardTitle className="text-lg">Benefit Calculator</CardTitle>
                   <CardDescription>
                     Calculate potential benefits and subsidies for different schemes
@@ -82,7 +82,7 @@ const GovernmentSchemes = () => {
                 <CardHeader>
                   <div className="flex justify-center mb-2">
                     <Shield className="h-6 w-6 text-red-600" />
-                  </div>
+                </div>
                   <CardTitle className="text-lg">Document Management</CardTitle>
                   <CardDescription>
                     Upload and manage required documents for scheme applications
@@ -94,14 +94,14 @@ const GovernmentSchemes = () => {
                 <CardHeader>
                   <div className="flex justify-center mb-2">
                     <Award className="h-6 w-6 text-yellow-600" />
-                  </div>
+                </div>
                   <CardTitle className="text-lg">Success Stories</CardTitle>
                   <CardDescription>
                     Learn from farmers who have successfully benefited from schemes
                   </CardDescription>
                 </CardHeader>
               </Card>
-            </div>
+              </div>
 
             {/* Categories Preview */}
             <Card>
@@ -158,22 +158,22 @@ const GovernmentSchemes = () => {
 
             {/* Progress Indicator */}
             <Card>
-              <CardHeader>
+                    <CardHeader>
                 <CardTitle>Development Progress</CardTitle>
                 <CardDescription>
                   Current status of the Government Schemes module
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Backend API Development</span>
                     <Badge variant="secondary">In Progress</Badge>
-                  </div>
+                      </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Frontend Interface</span>
                     <Badge variant="secondary">Planned</Badge>
-                  </div>
+          </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Scheme Database</span>
                     <Badge variant="secondary">In Progress</Badge>
@@ -185,8 +185,8 @@ const GovernmentSchemes = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+                </div>
+              </div>
       </div>
     </div>
   );

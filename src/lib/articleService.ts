@@ -1,6 +1,6 @@
 import type { Article, CreateArticleDTO, UpdateArticleDTO } from './types';
 
-const API_URL = 'http://localhost:8000/api/v1/content/news_articles/';
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1/content/news_articles/`;
 
 export const articleService = {
   async getArticles(page = 1, pageSize = 10) {

@@ -16,7 +16,7 @@ export type Video = {
   updated_at?: string;
 };
 
-const API_BASE = 'http://127.0.0.1:8000/api/v1/content/videos/';
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/content/videos/`;
 
 async function getAuthHeaders() {
   const session = await getCurrentSession();

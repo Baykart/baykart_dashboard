@@ -259,7 +259,7 @@ const MarketPrices = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Add Price
               </Button>
-            </div>
+              </div>
 
             {/* Statistics Cards */}
             {stats && (
@@ -305,7 +305,7 @@ const MarketPrices = () => {
                   </CardContent>
                 </Card>
               </div>
-            )}
+                )}
 
             {/* Filters */}
             <Card>
@@ -364,13 +364,13 @@ const MarketPrices = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="All trends" />
                       </SelectTrigger>
-                      <SelectContent>
+                <SelectContent>
                         <SelectItem value="all">All trends</SelectItem>
                         <SelectItem value="up">Up</SelectItem>
                         <SelectItem value="down">Down</SelectItem>
                         <SelectItem value="stable">Stable</SelectItem>
-                      </SelectContent>
-                    </Select>
+                </SelectContent>
+              </Select>
                   </div>
                   <div>
                     <Label htmlFor="market_type">Market Type</Label>
@@ -378,21 +378,21 @@ const MarketPrices = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="All types" />
                       </SelectTrigger>
-                      <SelectContent>
+                <SelectContent>
                         <SelectItem value="all">All types</SelectItem>
                         <SelectItem value="retail">Retail</SelectItem>
                         <SelectItem value="wholesale">Wholesale</SelectItem>
                         <SelectItem value="farm_gate">Farm Gate</SelectItem>
                         <SelectItem value="export">Export</SelectItem>
-                      </SelectContent>
-                    </Select>
+                </SelectContent>
+              </Select>
                   </div>
                 </div>
                 <div className="mt-4">
                   <Button variant="outline" onClick={clearFilters}>
                     Clear Filters
                   </Button>
-                </div>
+            </div>
               </CardContent>
             </Card>
 
@@ -403,20 +403,20 @@ const MarketPrices = () => {
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Crop</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Crop</TableHead>
                         <TableHead>Location</TableHead>
-                        <TableHead>Price</TableHead>
+                    <TableHead>Price</TableHead>
                         <TableHead>Trend</TableHead>
                         <TableHead>Market Type</TableHead>
                         <TableHead>Season</TableHead>
-                        <TableHead>Date</TableHead>
+                    <TableHead>Date</TableHead>
                         <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                       {filteredPrices.map((price) => (
                         <TableRow key={price.id}>
                           <TableCell>
@@ -509,11 +509,11 @@ const MarketPrices = () => {
                               </AlertDialog>
                             </div>
                           </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
               </CardContent>
             </Card>
           </div>
@@ -568,7 +568,7 @@ const MarketPrices = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
+              <div>
                     <Label htmlFor="price">Price (D) *</Label>
                     <Input
                       id="price"
@@ -579,21 +579,21 @@ const MarketPrices = () => {
                       placeholder="Enter price"
                       required
                     />
-                  </div>
-                  <div>
+              </div>
+              <div>
                     <Label htmlFor="price_unit">Unit</Label>
                     <Select value={formData.price_unit} onValueChange={(value) => setFormData({ ...formData, price_unit: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                  <SelectContent>
                         <SelectItem value="kg">kg</SelectItem>
                         <SelectItem value="bag">bag</SelectItem>
                         <SelectItem value="piece">piece</SelectItem>
                         <SelectItem value="liter">liter</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectContent>
+                </Select>
+              </div>
                   <div>
                     <Label htmlFor="previous_price">Previous Price</Label>
                     <Input
@@ -605,7 +605,7 @@ const MarketPrices = () => {
                       placeholder="Previous price"
                     />
                   </div>
-                </div>
+            </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="market_type">Market Type</Label>
@@ -613,13 +613,13 @@ const MarketPrices = () => {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                  <SelectContent>
                         <SelectItem value="retail">Retail</SelectItem>
                         <SelectItem value="wholesale">Wholesale</SelectItem>
                         <SelectItem value="farm_gate">Farm Gate</SelectItem>
                         <SelectItem value="export">Export</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  </SelectContent>
+                </Select>
                   </div>
                   <div>
                     <Label htmlFor="season">Season</Label>
@@ -627,14 +627,14 @@ const MarketPrices = () => {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                  <SelectContent>
                         <SelectItem value="peak">Peak Season</SelectItem>
                         <SelectItem value="off_peak">Off Season</SelectItem>
                         <SelectItem value="harvest">Harvest Season</SelectItem>
                         <SelectItem value="planting">Planting Season</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectContent>
+                </Select>
+              </div>
                 </div>
                 <div>
                   <Label htmlFor="source">Source</Label>
@@ -653,7 +653,7 @@ const MarketPrices = () => {
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Additional notes"
                   />
-                </div>
+              </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
@@ -667,9 +667,9 @@ const MarketPrices = () => {
           {/* Edit Market Price Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
+                <DialogHeader>
                 <DialogTitle>Edit Market Price</DialogTitle>
-              </DialogHeader>
+                </DialogHeader>
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -791,23 +791,23 @@ const MarketPrices = () => {
                     value={editFormData.notes}
                     onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
                   />
-                </div>
-                <DialogFooter>
+                  </div>
+                  <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                    Cancel
+                      Cancel
                   </Button>
                   <Button type="submit">Update Price</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
 
           {/* View Market Price Dialog */}
           <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
             <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
+                <DialogHeader>
                 <DialogTitle>Market Price Details</DialogTitle>
-              </DialogHeader>
+                </DialogHeader>
               {viewingPrice && (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
@@ -895,12 +895,12 @@ const MarketPrices = () => {
                   </div>
                 </div>
               )}
-              <DialogFooter>
+                <DialogFooter>
                 <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
       </div>
     </div>
   );
