@@ -1,6 +1,11 @@
 import type { Article, CreateArticleDTO, UpdateArticleDTO } from './types';
+import { supabase } from './supabase';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/v1/content/news_articles/`;
+
+// Debug: Log the API URL being used
+console.log('🔍 ArticleService - API URL:', API_URL);
+console.log('🔍 ArticleService - VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 export const articleService = {
   async getArticles(page = 1, pageSize = 10) {
