@@ -3,9 +3,9 @@ import { Header } from "@/components/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Gift, Calendar, Users, TrendingUp, Clock } from "lucide-react";
+import { Users, MessageCircle, Calendar, TrendingUp, Clock, Globe, Heart, Share2 } from "lucide-react";
 
-const Coupons = () => {
+const Community = () => {
   return (
     <div className="flex h-screen">
       <Sidebar />
@@ -16,11 +16,11 @@ const Coupons = () => {
             {/* Header */}
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
-                <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <Gift className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
+                  <Users className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Coupons & Discounts</h1>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">Community Hub</h1>
               <p className="text-xl text-gray-600">Coming Soon</p>
               <Badge variant="secondary" className="mt-4">
                 <Clock className="w-4 h-4 mr-2" />
@@ -31,12 +31,12 @@ const Coupons = () => {
             {/* Features Preview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <Card className="text-center p-6">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Gift className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-6 h-6 text-purple-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Discount Coupons</h3>
+                <h3 className="text-lg font-semibold mb-2">Discussion Forums</h3>
                 <p className="text-gray-600 text-sm">
-                  Create and manage discount coupons for farmers and vendors
+                  Connect with fellow farmers and share knowledge, tips, and experiences
                 </p>
               </Card>
 
@@ -44,19 +44,19 @@ const Coupons = () => {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calendar className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Promotional Campaigns</h3>
+                <h3 className="text-lg font-semibold mb-2">Events & Meetups</h3>
                 <p className="text-gray-600 text-sm">
-                  Launch time-limited promotional campaigns and seasonal offers
+                  Organize and join agricultural events, workshops, and community meetups
                 </p>
               </Card>
 
               <Card className="text-center p-6">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Globe className="w-6 h-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">User Targeting</h3>
+                <h3 className="text-lg font-semibold mb-2">Local Groups</h3>
                 <p className="text-gray-600 text-sm">
-                  Target specific user groups with personalized discount offers
+                  Join local farming communities and regional agricultural groups
                 </p>
               </Card>
 
@@ -64,38 +64,38 @@ const Coupons = () => {
                 <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="w-6 h-6 text-orange-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Analytics & Tracking</h3>
+                <h3 className="text-lg font-semibold mb-2">Knowledge Sharing</h3>
                 <p className="text-gray-600 text-sm">
-                  Track coupon usage, redemption rates, and campaign performance
+                  Share farming techniques, crop insights, and best practices
                 </p>
               </Card>
 
               <Card className="text-center p-6">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Gift className="w-6 h-6 text-red-600" />
+                  <Heart className="w-6 h-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Referral Rewards</h3>
+                <h3 className="text-lg font-semibold mb-2">Mentorship</h3>
                 <p className="text-gray-600 text-sm">
-                  Implement referral programs with reward coupons for users
+                  Connect experienced farmers with newcomers for guidance and support
                 </p>
               </Card>
 
               <Card className="text-center p-6">
                 <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="w-6 h-6 text-indigo-600" />
+                  <Share2 className="w-6 h-6 text-indigo-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Seasonal Offers</h3>
+                <h3 className="text-lg font-semibold mb-2">Resource Sharing</h3>
                 <p className="text-gray-600 text-sm">
-                  Create seasonal and holiday-specific discount campaigns
+                  Share tools, equipment, and resources within the community
                 </p>
               </Card>
             </div>
 
             {/* Coming Soon Details */}
-            <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-green-600" />
+                  <Clock className="w-5 h-5 mr-2 text-purple-600" />
                   What's Coming
                 </CardTitle>
               </CardHeader>
@@ -105,31 +105,32 @@ const Coupons = () => {
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Core Features</h4>
                       <ul className="space-y-2 text-sm text-gray-600">
-                        <li>• Coupon creation and management</li>
-                        <li>• Discount code generation</li>
-                        <li>• Usage tracking and analytics</li>
-                        <li>• Expiration date management</li>
-                        <li>• User redemption tracking</li>
+                        <li>• Discussion forums and chat rooms</li>
+                        <li>• Event creation and management</li>
+                        <li>• Local community groups</li>
+                        <li>• Knowledge base and articles</li>
+                        <li>• User profiles and connections</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Advanced Features</h4>
                       <ul className="space-y-2 text-sm text-gray-600">
-                        <li>• Automated email campaigns</li>
-                        <li>• A/B testing for offers</li>
-                        <li>• Integration with marketplace</li>
-                        <li>• Mobile app notifications</li>
-                        <li>• Performance reporting</li>
+                        <li>• Video conferencing for meetings</li>
+                        <li>• Resource marketplace</li>
+                        <li>• Mentorship matching system</li>
+                        <li>• Mobile app integration</li>
+                        <li>• Analytics and insights</li>
                       </ul>
                     </div>
                   </div>
                   
                   <div className="mt-6 p-4 bg-white rounded-lg border">
-                    <h4 className="font-semibold text-gray-900 mb-2">Expected Launch</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">Community Benefits</h4>
                     <p className="text-sm text-gray-600">
-                      The Coupons & Discounts module is currently in development. 
-                      We're working hard to bring you a comprehensive discount management system 
-                      that will help boost sales and user engagement across the platform.
+                      The Community Hub will bring together farmers, vendors, and agricultural experts 
+                      to create a vibrant ecosystem of knowledge sharing, collaboration, and mutual support. 
+                      Connect with like-minded individuals, learn from experienced farmers, and contribute to 
+                      the growth of the agricultural community in The Gambia.
                     </p>
                   </div>
                 </div>
@@ -138,12 +139,12 @@ const Coupons = () => {
 
             {/* Call to Action */}
             <div className="text-center mt-8">
-              <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
-                <Gift className="w-5 h-5 mr-2" />
-                Get Notified When Available
+              <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                <Users className="w-5 h-5 mr-2" />
+                Join the Waitlist
               </Button>
               <p className="text-sm text-gray-500 mt-2">
-                We'll notify you when the Coupons module is ready
+                Be among the first to experience the Community Hub
               </p>
             </div>
           </div>
@@ -153,4 +154,4 @@ const Coupons = () => {
   );
 };
 
-export default Coupons; 
+export default Community; 

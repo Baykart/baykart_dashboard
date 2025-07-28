@@ -102,3 +102,33 @@ export const uploadProfileImage = async (userId: string, imageFile: File): Promi
 
   return imageUrl;
 }; 
+
+export const refreshToken = async (): Promise<Session | null> => {
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error) {
+    console.error('Error refreshing token:', error);
+    throw error;
+  }
+  return data.session;
+};
+
+export const getValidSession = async (): Promise<Session | null> => {
+  try {
+    const session = await getCurrentSession();
+    if (!session) return null;
+    
+    // Check if token is expired (with 5 minute buffer)
+    const expiresAt = session.expires_at;
+    const now = Math.floor(Date.now() / 1000);
+    
+    if (expiresAt && (expiresAt - now) < 300) { // 5 minutes buffer
+      console.log('Token expiring soon, refreshing...');
+      return await refreshToken();
+    }
+    
+    return session;
+  } catch (error) {
+    console.error('Error getting valid session:', error);
+    return null;
+  }
+}; 

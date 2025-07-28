@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api/v1': 'http://127.0.0.1:8000',
+      '/health': 'http://127.0.0.1:8000',
     },
   },
   plugins: [

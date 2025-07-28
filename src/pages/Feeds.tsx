@@ -27,7 +27,7 @@ export default function Feeds() {
 
   useEffect(() => {
     if (accessToken) {
-      fetchPosts(1, true);
+    fetchPosts(1, true);
     }
     // eslint-disable-next-line
   }, [accessToken]);

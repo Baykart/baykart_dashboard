@@ -30,83 +30,46 @@ export const getEvents = async (): Promise<Event[]> => {
 // Get upcoming events
 export const getUpcomingEvents = async (): Promise<Event[]> => {
   const today = new Date().toISOString().split('T')[0];
-  
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .gte('event_date', today)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching upcoming events:', error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?event_date__gte=${today}`, { headers });
+  if (!res.ok) throw new Error('Failed to fetch upcoming events');
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get events by type
 export const getEventsByType = async (eventType: string): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('event_type', eventType)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error(`Error fetching events of type ${eventType}:`, error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?event_type=${eventType}`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch events of type ${eventType}`);
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get events by category
 export const getEventsByCategory = async (category: string): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('category', category)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error(`Error fetching events in category ${category}:`, error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?category=${category}`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch events in category ${category}`);
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get events by location
 export const getEventsByLocation = async (city: string): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('city', city)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error(`Error fetching events in city ${city}:`, error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?city=${city}`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch events in city ${city}`);
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get a single event by ID
 export const getEventById = async (id: string): Promise<Event | null> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    console.error(`Error fetching event with ID ${id}:`, error);
-    throw error;
-  }
-
-  return data;
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${id}/`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch event with ID ${id}`);
+  return await res.json();
 };
 
 export const createEvent = async (event: EventInput, imageFile?: File): Promise<Event> => {

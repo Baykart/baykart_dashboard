@@ -1,357 +1,750 @@
-import { useState, useEffect } from 'react';
-import { AgriService } from '@/types/feeds';
-import { getAgriServices, createAgriService, updateAgriService, deleteAgriService, toggleAgriServiceActive, toggleAgriServiceVerified, uploadAgriServiceImage } from '@/lib/services/agriService';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Dialog, DialogHeader, DialogContent, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { Pagination, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
-import { format } from 'date-fns';
-// TODO: import image upload util from contentService
-import { Sidebar } from '@/components/Sidebar';
-import { Header } from '@/components/Header';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { useEffect, useState } from "react";
+import { Sidebar } from "@/components/Sidebar";
+import { Header } from "@/components/Header";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { Plus, Search, Filter, Eye, Edit, Trash2, MapPin, Phone, Calendar, CheckCircle, XCircle, Truck, Snowflake, Wrench, User, Shield, Droplets, Package, Settings } from "lucide-react";
+import * as agriServicesService from "@/lib/agriServicesService";
 
-const CATEGORY_OPTIONS = [
-  { value: 'transport', label: 'Transport' },
-  { value: 'cold_storage', label: 'Cold Storage' },
-  { value: 'machinery', label: 'Machinery' },
-  { value: 'agronomist', label: 'Agronomist' },
-  { value: 'crop_insurance', label: 'Crop Insurance' },
-  { value: 'borehole', label: 'Borehole' },
-  { value: 'storage', label: 'Storage' },
-  { value: 'other', label: 'Other' },
-];
-
-function AgriServiceForm({ initial, onSubmit, onCancel, isLoading }: any) {
-  const [form, setForm] = useState<Partial<AgriService>>(initial || {});
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [errors, setErrors] = useState<any>({});
-
-  // Basic validation
-  const validate = () => {
-    const errs: any = {};
-    if (!form.name) errs.name = 'Required';
-    if (!form.category) errs.category = 'Required';
-    if (!form.description) errs.description = 'Required';
-    if (!form.location) errs.location = 'Required';
-    if (!form.coverage_area) errs.coverage_area = 'Required';
-    if (!form.contact_info || !/\d{7,}/.test(form.contact_info)) errs.contact_info = 'Enter valid phone/WhatsApp';
-    return errs;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const errs = validate();
-    setErrors(errs);
-    if (Object.keys(errs).length) return;
-    setUploading(true);
-    let image_url = form.image_url;
-    if (imageFile) {
-      try {
-        image_url = await uploadAgriServiceImage(imageFile);
-      } catch (err) {
-        alert('Image upload failed');
-        setUploading(false);
-        return;
-      }
-    }
-    setUploading(false);
-    onSubmit({ ...form, image_url });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Input name="name" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Service Name" required />
-        {errors.name && <div className="text-red-500 text-xs">{errors.name}</div>}
-      </div>
-      <div>
-        <select name="category" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value })} required className="w-full border rounded p-2">
-          <option value="">Select Category</option>
-          {CATEGORY_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-        </select>
-        {errors.category && <div className="text-red-500 text-xs">{errors.category}</div>}
-      </div>
-      <div>
-        <Textarea name="description" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Short Description" required />
-        {errors.description && <div className="text-red-500 text-xs">{errors.description}</div>}
-      </div>
-      <div>
-        <Input name="location" value={form.location || ''} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="Location" required />
-        {errors.location && <div className="text-red-500 text-xs">{errors.location}</div>}
-      </div>
-      <div>
-        <Input name="coverage_area" value={form.coverage_area || ''} onChange={e => setForm({ ...form, coverage_area: e.target.value })} placeholder="Coverage Area" required />
-        {errors.coverage_area && <div className="text-red-500 text-xs">{errors.coverage_area}</div>}
-      </div>
-      <div>
-        <Input name="contact_info" value={form.contact_info || ''} onChange={e => setForm({ ...form, contact_info: e.target.value })} placeholder="Contact Info (WhatsApp/Phone)" required />
-        {errors.contact_info && <div className="text-red-500 text-xs">{errors.contact_info}</div>}
-      </div>
-      <Input name="pricing_notes" value={form.pricing_notes || ''} onChange={e => setForm({ ...form, pricing_notes: e.target.value })} placeholder="Pricing Notes (optional)" />
-      <Input name="availability" value={form.availability || ''} onChange={e => setForm({ ...form, availability: e.target.value })} placeholder="Availability (e.g., weekdays)" />
-      <Input type="file" accept="image/*" onChange={e => { if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]); }} />
-      {form.image_url && <img src={form.image_url} alt="Preview" className="w-24 h-24 object-cover rounded" />}
-      <DialogFooter>
-        <Button type="submit" disabled={isLoading || uploading}>{uploading ? 'Uploading...' : 'Save'}</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-      </DialogFooter>
-    </form>
-  );
-}
-
-export function Agriservices() {
-  const [services, setServices] = useState<AgriService[]>([]);
+const AgriServices = () => {
+  // State management
+  const [agriServices, setAgriServices] = useState<agriServicesService.AgriService[]>([]);
+  const [stats, setStats] = useState<agriServicesService.AgriServiceStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [location, setLocation] = useState('');
-  const [coverage, setCoverage] = useState('');
-  const [pricing, setPricing] = useState('');
-  const [availability, setAvailability] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editService, setEditService] = useState<AgriService | null>(null);
-  const [formLoading, setFormLoading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const { toast } = useToast();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
-  useEffect(() => {
-    loadServices();
-  }, [search, category, location, coverage, pricing, availability, dateFrom, dateTo, page, pageSize]);
+  // Dialog states
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<agriServicesService.AgriService | null>(null);
+  const [viewingService, setViewingService] = useState<agriServicesService.AgriService | null>(null);
 
-  const loadServices = async () => {
-    setLoading(true);
+  // Form data
+  const [formData, setFormData] = useState({
+    name: "", category: "transport", description: "", location: "", coverage_area: "",
+    contact_info: "", pricing_notes: "", availability: "", image_url: "",
+  });
+
+  const [editFormData, setEditFormData] = useState({
+    name: "", category: "transport", description: "", location: "", coverage_area: "",
+    contact_info: "", pricing_notes: "", availability: "", image_url: "",
+  });
+
+  // Fetch data on component mount
+  useEffect(() => { fetchData(); }, []);
+
+  const fetchData = async () => {
     try {
-      const params: any = {
-        search,
-        category,
-        location,
-        coverage_area: coverage,
-        pricing_notes: pricing,
-        availability,
-        date_from: dateFrom,
-        date_to: dateTo,
-        page,
-        page_size: pageSize,
-      };
-      const url = new URL('/api/agriservices/', window.location.origin);
-      Object.entries(params).forEach(([k, v]) => { if (v) url.searchParams.append(k, v as string); });
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error('Failed to fetch agri services');
-      const data = await res.json();
-      setServices(data.results || data);
-      setTotal(data.count || data.length || 0);
+      setLoading(true);
+      const [servicesRes, statsRes] = await Promise.all([
+        agriServicesService.getAgriServices(),
+        agriServicesService.getAgriServiceStats(),
+      ]);
+      setAgriServices(servicesRes.results || []);
+      setStats(statsRes);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load agri services data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFormSubmit = async (data: Partial<AgriService>) => {
-    setFormLoading(true);
+  // Filter services
+  const filteredServices = agriServices.filter((service) => {
+    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         service.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || service.category === selectedCategory;
+    const matchesLocation = selectedLocation === "all" || service.location.toLowerCase().includes(selectedLocation.toLowerCase());
+    const matchesStatus = selectedStatus === "all" || 
+                         (selectedStatus === "active" && service.is_active) ||
+                         (selectedStatus === "verified" && service.is_verified);
+
+    return matchesSearch && matchesCategory && matchesLocation && matchesStatus;
+  });
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      if (editService) {
-        await updateAgriService(editService.id, data);
-        toast({ title: 'Service updated' });
-      } else {
-        await createAgriService(data);
-        toast({ title: 'Service created' });
-      }
-      setShowModal(false);
-      await loadServices();
-    } catch (err: any) {
-      let msg = 'Failed to save service';
-      if (err instanceof SyntaxError) msg = 'API returned invalid JSON (likely an auth or server error)';
-      toast({ title: msg, description: err?.message, variant: 'destructive' });
-    } finally {
-      setFormLoading(false);
+      await agriServicesService.addAgriService(formData);
+      toast.success("Agri service added successfully");
+      setIsDialogOpen(false);
+      setFormData({
+        name: "", category: "transport", description: "", location: "", coverage_area: "",
+        contact_info: "", pricing_notes: "", availability: "", image_url: "",
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error adding service:", error);
+      toast.error("Failed to add agri service");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this service?')) return;
-    setDeletingId(id);
+  // Handle edit
+  const handleEdit = (service: agriServicesService.AgriService) => {
+    setEditingService(service);
+    setEditFormData({
+      name: service.name,
+      category: service.category,
+      description: service.description,
+      location: service.location,
+      coverage_area: service.coverage_area,
+      contact_info: service.contact_info,
+      pricing_notes: service.pricing_notes,
+      availability: service.availability,
+      image_url: service.image_url || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle edit submission
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingService) return;
+    
     try {
-      await deleteAgriService(id);
-      toast({ title: 'Service deleted' });
-      await loadServices();
-    } catch (err) {
-      toast({ title: 'Failed to delete', variant: 'destructive' });
-    } finally {
-      setDeletingId(null);
+      await agriServicesService.updateAgriService(editingService.id, editFormData);
+      toast.success("Agri service updated successfully");
+      setIsEditDialogOpen(false);
+      setEditingService(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error updating service:", error);
+      toast.error("Failed to update agri service");
     }
   };
 
-  const handleToggleActive = async (id: string, is_active: boolean) => {
+  // Handle view
+  const handleView = (service: agriServicesService.AgriService) => {
+    setViewingService(service);
+    setIsViewDialogOpen(true);
+  };
+
+  // Handle delete
+  const handleDelete = async (id: number) => {
     try {
-      await toggleAgriServiceActive(id, is_active);
-      await loadServices();
-    } catch {
-      toast({ title: 'Failed to update active status', variant: 'destructive' });
+      await agriServicesService.deleteAgriService(id);
+      toast.success("Agri service deleted successfully");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      toast.error("Failed to delete agri service");
     }
   };
 
-  const handleToggleVerified = async (id: string, is_verified: boolean) => {
-    try {
-      await toggleAgriServiceVerified(id, is_verified);
-      await loadServices();
-    } catch {
-      toast({ title: 'Failed to update verified status', variant: 'destructive' });
-    }
+  // Clear filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setSelectedLocation("all");
+    setSelectedStatus("all");
   };
+
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    const icons: { [key: string]: React.ReactNode } = {
+      transport: <Truck className="w-4 h-4" />,
+      cold_storage: <Snowflake className="w-4 h-4" />,
+      machinery: <Wrench className="w-4 h-4" />,
+      agronomist: <User className="w-4 h-4" />,
+      crop_insurance: <Shield className="w-4 h-4" />,
+      borehole: <Droplets className="w-4 h-4" />,
+      storage: <Package className="w-4 h-4" />,
+      other: <Settings className="w-4 h-4" />,
+    };
+    return icons[category] || <Settings className="w-4 h-4" />;
+  };
+
+  // Get unique categories and locations for filters
+  const categories = [...new Set(agriServices.map(service => service.category))];
+  const locations = [...new Set(agriServices.map(service => service.location))];
+
+  if (loading) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading agri services...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto">
-          <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Agri Services Card/Table */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Agri Services</h1>
+                <p className="text-gray-600">Manage agricultural services and value chain providers</p>
+              </div>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Service
+              </Button>
+            </div>
+
+            {/* Statistics Cards */}
+            {stats && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Services</CardTitle>
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.total_services}</div>
+                    <p className="text-xs text-muted-foreground">Agricultural services</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Services</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.active_services}</div>
+                    <p className="text-xs text-muted-foreground">Currently available</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Verified Services</CardTitle>
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.verified_services}</div>
+                    <p className="text-xs text-muted-foreground">Quality assured</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Categories</CardTitle>
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.category_stats.length}</div>
+                    <p className="text-xs text-muted-foreground">Service types</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Filters */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle>Agri Services</CardTitle>
-                <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => { setEditService(null); setShowModal(true); }}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Service
-                </Button>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Filter className="w-5 h-5 mr-2" />
+                  Filters
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4 items-end">
-                  <Input
-                    placeholder="Search by name/desc/contact..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="w-56"
-                  />
-                  <select value={category} onChange={e => setCategory(e.target.value)} className="border rounded p-2">
-                    <option value="">All Categories</option>
-                    {CATEGORY_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
-                  <Input
-                    placeholder="Location"
-                    value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    className="w-40"
-                  />
-                  <Input
-                    placeholder="Coverage Area"
-                    value={coverage}
-                    onChange={e => setCoverage(e.target.value)}
-                    className="w-40"
-                  />
-                  <Input
-                    placeholder="Pricing Notes"
-                    value={pricing}
-                    onChange={e => setPricing(e.target.value)}
-                    className="w-40"
-                  />
-                  <Input
-                    placeholder="Availability"
-                    value={availability}
-                    onChange={e => setAvailability(e.target.value)}
-                    className="w-40"
-                  />
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={e => setDateFrom(e.target.value)}
-                    className="w-36"
-                    title="From date"
-                  />
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={e => setDateTo(e.target.value)}
-                    className="w-36"
-                    title="To date"
-                  />
-                  <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="border rounded p-2">
-                    {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="search">Search</Label>
+                    <Input
+                      id="search"
+                      placeholder="Search services..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All categories</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category.replace('_', ' ').toUpperCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All locations" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All locations</SelectItem>
+                        {locations.map((location) => (
+                          <SelectItem key={location} value={location}>
+                            {location}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="verified">Verified</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Location</th>
-                        <th>Coverage</th>
-                        <th>Contact</th>
-                        <th>Active</th>
-                        <th>Verified</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loading ? (
-                        <tr><td colSpan={10} className="text-center p-8">Loading...</td></tr>
-                      ) : services.length === 0 ? (
-                        <tr><td colSpan={10} className="text-center p-8">No services found</td></tr>
-                      ) : services.map((s) => (
-                        <tr key={s.id}>
-                          <td>{s.image_url ? <img src={s.image_url} alt="" className="w-12 h-12 object-cover rounded" /> : '-'}</td>
-                          <td>{s.name}</td>
-                          <td>{s.category}</td>
-                          <td>{s.location}</td>
-                          <td>{s.coverage_area}</td>
-                          <td>{s.contact_info}</td>
-                          <td>
-                            <Switch checked={s.is_active} onCheckedChange={v => handleToggleActive(s.id, v)} disabled={loading} />
-                          </td>
-                          <td>
-                            <Switch checked={s.is_verified} onCheckedChange={v => handleToggleVerified(s.id, v)} disabled={loading} />
-                          </td>
-                          <td>{format(new Date(s.date_submitted), 'yyyy-MM-dd')}</td>
-                          <td>
-                            <Button size="sm" variant="outline" onClick={() => { setEditService(s); setShowModal(true); }} disabled={loading}><Edit className="h-4 w-4" /></Button>
-                            <Button size="sm" variant="outline" onClick={() => handleDelete(s.id)} disabled={deletingId === s.id || loading}><Trash2 className="h-4 w-4" /></Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <div>Showing {services.length} of {total} services</div>
-                  <Pagination>
-                    <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} />
-                    <span className="mx-2">Page {page} of {Math.max(1, Math.ceil(total / pageSize))}</span>
-                    <PaginationNext onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))} disabled={page >= Math.ceil(total / pageSize)} />
-                  </Pagination>
+                <div className="mt-4">
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
                 </div>
               </CardContent>
-              <Dialog open={showModal} onOpenChange={setShowModal}>
-                <DialogContent aria-describedby="agriservice-dialog-desc">
-                  <DialogTitle>{editService ? 'Edit Service' : 'Add Service'}</DialogTitle>
-                  <DialogDescription>
-                    Fill in the form to add or edit an agri service.
-                  </DialogDescription>
-                  <AgriServiceForm
-                    initial={editService}
-                    onSubmit={handleFormSubmit}
-                    onCancel={() => setShowModal(false)}
-                    isLoading={formLoading}
-                  />
-                </DialogContent>
-              </Dialog>
+            </Card>
+
+            {/* Agri Services Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Agri Services</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredServices.map((service) => (
+                        <TableRow key={service.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="w-8 h-8">
+                                <AvatarFallback>{getCategoryIcon(service.category)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{service.name}</div>
+                                <div className="text-sm text-gray-500">{service.coverage_area}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{service.category_display}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span>{service.location}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-1">
+                              <Phone className="w-4 h-4 text-gray-500" />
+                              <span className="text-sm">{service.contact_info}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              {service.is_active ? (
+                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Active
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive">
+                                  <XCircle className="w-3 h-3 mr-1" />
+                                  Inactive
+                                </Badge>
+                              )}
+                              {service.is_verified && (
+                                <Badge variant="outline" className="border-blue-200 text-blue-800">
+                                  Verified
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline" size="sm" onClick={() => handleView(service)}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline" size="sm" onClick={() => handleEdit(service)}>
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Agri Service</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this agri service? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(service.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
             </Card>
           </div>
-        </main>
+
+          {/* Add Agri Service Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Agri Service</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Service Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="transport">Transport</SelectItem>
+                        <SelectItem value="cold_storage">Cold Storage</SelectItem>
+                        <SelectItem value="machinery">Machinery</SelectItem>
+                        <SelectItem value="agronomist">Agronomist</SelectItem>
+                        <SelectItem value="crop_insurance">Crop Insurance</SelectItem>
+                        <SelectItem value="borehole">Borehole</SelectItem>
+                        <SelectItem value="storage">Storage</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <textarea
+                    id="description"
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="coverage_area">Coverage Area</Label>
+                    <Input
+                      id="coverage_area"
+                      value={formData.coverage_area}
+                      onChange={(e) => setFormData({...formData, coverage_area: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="contact_info">Contact Info</Label>
+                    <Input
+                      id="contact_info"
+                      value={formData.contact_info}
+                      onChange={(e) => setFormData({...formData, contact_info: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pricing_notes">Pricing Notes</Label>
+                    <Input
+                      id="pricing_notes"
+                      value={formData.pricing_notes}
+                      onChange={(e) => setFormData({...formData, pricing_notes: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="availability">Availability</Label>
+                  <Input
+                    id="availability"
+                    value={formData.availability}
+                    onChange={(e) => setFormData({...formData, availability: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image_url">Image URL (Optional)</Label>
+                  <Input
+                    id="image_url"
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Add Service</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Agri Service Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Agri Service</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-name">Service Name</Label>
+                    <Input
+                      id="edit-name"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-category">Category</Label>
+                    <Select value={editFormData.category} onValueChange={(value) => setEditFormData({...editFormData, category: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="transport">Transport</SelectItem>
+                        <SelectItem value="cold_storage">Cold Storage</SelectItem>
+                        <SelectItem value="machinery">Machinery</SelectItem>
+                        <SelectItem value="agronomist">Agronomist</SelectItem>
+                        <SelectItem value="crop_insurance">Crop Insurance</SelectItem>
+                        <SelectItem value="borehole">Borehole</SelectItem>
+                        <SelectItem value="storage">Storage</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-description">Description</Label>
+                  <textarea
+                    id="edit-description"
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-location">Location</Label>
+                    <Input
+                      id="edit-location"
+                      value={editFormData.location}
+                      onChange={(e) => setEditFormData({...editFormData, location: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-coverage_area">Coverage Area</Label>
+                    <Input
+                      id="edit-coverage_area"
+                      value={editFormData.coverage_area}
+                      onChange={(e) => setEditFormData({...editFormData, coverage_area: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-contact_info">Contact Info</Label>
+                    <Input
+                      id="edit-contact_info"
+                      value={editFormData.contact_info}
+                      onChange={(e) => setEditFormData({...editFormData, contact_info: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-pricing_notes">Pricing Notes</Label>
+                    <Input
+                      id="edit-pricing_notes"
+                      value={editFormData.pricing_notes}
+                      onChange={(e) => setEditFormData({...editFormData, pricing_notes: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-availability">Availability</Label>
+                  <Input
+                    id="edit-availability"
+                    value={editFormData.availability}
+                    onChange={(e) => setEditFormData({...editFormData, availability: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-image_url">Image URL (Optional)</Label>
+                  <Input
+                    id="edit-image_url"
+                    type="url"
+                    value={editFormData.image_url}
+                    onChange={(e) => setEditFormData({...editFormData, image_url: e.target.value})}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Update Service</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* View Agri Service Dialog */}
+          <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Agri Service Details</DialogTitle>
+              </DialogHeader>
+              {viewingService && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback>{getCategoryIcon(viewingService.category)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-lg font-semibold">{viewingService.name}</h3>
+                      <p className="text-sm text-gray-500">{viewingService.category_display}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Description</Label>
+                    <p className="text-sm text-gray-600 mt-1">{viewingService.description}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="font-medium">Location</Label>
+                      <p className="text-sm text-gray-600 mt-1">{viewingService.location}</p>
+                    </div>
+                    <div>
+                      <Label className="font-medium">Coverage Area</Label>
+                      <p className="text-sm text-gray-600 mt-1">{viewingService.coverage_area}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="font-medium">Contact Info</Label>
+                      <p className="text-sm text-gray-600 mt-1">{viewingService.contact_info}</p>
+                    </div>
+                    <div>
+                      <Label className="font-medium">Availability</Label>
+                      <p className="text-sm text-gray-600 mt-1">{viewingService.availability}</p>
+                    </div>
+                  </div>
+                  {viewingService.pricing_notes && (
+                    <div>
+                      <Label className="font-medium">Pricing Notes</Label>
+                      <p className="text-sm text-gray-600 mt-1">{viewingService.pricing_notes}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2">
+                    {viewingService.is_active ? (
+                      <Badge variant="default" className="bg-green-100 text-green-800">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Inactive
+                      </Badge>
+                    )}
+                    {viewingService.is_verified && (
+                      <Badge variant="outline" className="border-blue-200 text-blue-800">
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Submitted by: {viewingService.submitted_by_name} on {new Date(viewingService.date_submitted).toLocaleDateString()}
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   );
-} 
+};
+
+export default AgriServices; 

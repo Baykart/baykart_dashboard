@@ -1,92 +1,115 @@
 import { supabase } from './supabase';
 
+const API_BASE = '/api/v1/';
+
 export interface Category {
   id: string;
   name: string;
   description: string | null;
-  imageurl: string | null;
   created_at: string;
+  is_active: boolean;
+  image_url: string | null;
 }
 
-export interface CategoryInput {
-  name: string;
-  description?: string | null;
-  imageurl?: string | null;
+export interface CategoryResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Category[];
 }
 
-// Get all categories
-export const getCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from('crop_categories')
-    .select('*')
-    .order('name');
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+  return { Authorization: `Bearer ${token}` };
+}
 
-  if (error) {
-    console.error('Error fetching categories:', error);
-    throw error;
-  }
+export const categoryService = {
+  async getCategories(): Promise<CategoryResponse> {
+    try {
+      const response = await fetch(`${API_BASE}categories/`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
 
-  return data || [];
-};
+  async getCategory(id: string): Promise<Category> {
+    try {
+      const response = await fetch(`${API_BASE}categories/${id}/`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      throw error;
+    }
+  },
 
-// Get a single category by ID
-export const getCategoryById = async (id: string): Promise<Category | null> => {
-  const { data, error } = await supabase
-    .from('crop_categories')
-    .select('*')
-    .eq('id', id)
-    .single();
+  async createCategory(categoryData: Partial<Category>): Promise<Category> {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE}categories/`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(categoryData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to create category: ${JSON.stringify(errorData)}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+  },
 
-  if (error) {
-    console.error(`Error fetching category with ID ${id}:`, error);
-    throw error;
-  }
+  async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category> {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE}categories/${id}/`, {
+        method: 'PUT',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(categoryData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to update category: ${JSON.stringify(errorData)}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  },
 
-  return data;
-};
-
-// Create a new category
-export const createCategory = async (category: CategoryInput): Promise<Category> => {
-  const { data, error } = await supabase
-    .from('crop_categories')
-    .insert([category])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating category:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// Update an existing category
-export const updateCategory = async (id: string, category: CategoryInput): Promise<Category> => {
-  const { data, error } = await supabase
-    .from('crop_categories')
-    .update(category)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(`Error updating category with ID ${id}:`, error);
-    throw error;
-  }
-
-  return data;
-};
-
-// Delete a category
-export const deleteCategory = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('crop_categories')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error(`Error deleting category with ID ${id}:`, error);
-    throw error;
-  }
+  async deleteCategory(id: string): Promise<void> {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE}categories/${id}/`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to delete category: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+  },
 }; 

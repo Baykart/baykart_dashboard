@@ -6,12 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { 
-  getCategories, 
-  createCategory, 
-  updateCategory, 
-  deleteCategory,
-  Category,
-  CategoryInput
+  categoryService,
+  Category
 } from "@/lib/categoryService";
 import { 
   Dialog, 
@@ -43,10 +39,10 @@ const Index = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState<CategoryInput>({
+  const [formData, setFormData] = useState<any>({
     name: "",
     description: "",
-    imageurl: ""
+    image_url: ""
   });
   const { toast } = useToast();
 
@@ -58,8 +54,8 @@ const Index = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await getCategories();
-      setCategories(data);
+      const data = await categoryService.getCategories();
+      setCategories(data.results);
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast({
@@ -83,13 +79,13 @@ const Index = () => {
 
   const handleCreateCategory = async () => {
     try {
-      await createCategory(formData);
+      await categoryService.createCategory(formData);
       toast({
         title: "Success",
         description: "Category created successfully",
       });
       setIsCreateDialogOpen(false);
-      setFormData({ name: "", description: "", imageurl: "" });
+      setFormData({ name: "", description: "", image_url: "" });
       fetchCategories();
     } catch (error) {
       console.error("Error creating category:", error);
@@ -106,7 +102,7 @@ const Index = () => {
     setFormData({
       name: category.name,
       description: category.description || "",
-      imageurl: category.imageurl || ""
+      image_url: category.image_url || ""
     });
     setIsEditDialogOpen(true);
   };
@@ -115,7 +111,7 @@ const Index = () => {
     if (!currentCategory) return;
     
     try {
-      await updateCategory(currentCategory.id, formData);
+      await categoryService.updateCategory(currentCategory.id, formData);
       toast({
         title: "Success",
         description: "Category updated successfully",
@@ -141,7 +137,7 @@ const Index = () => {
     if (!currentCategory) return;
     
     try {
-      await deleteCategory(currentCategory.id);
+      await categoryService.deleteCategory(currentCategory.id);
       toast({
         title: "Success",
         description: "Category deleted successfully",
@@ -170,7 +166,7 @@ const Index = () => {
               <Button 
                 className="bg-primary hover:bg-primary/90 text-white"
                 onClick={() => {
-                  setFormData({ name: "", description: "", imageurl: "" });
+                  setFormData({ name: "", description: "", image_url: "" });
                   setIsCreateDialogOpen(true);
                 }}
               >
@@ -301,8 +297,8 @@ const Index = () => {
               <Label htmlFor="imageurl">Image URL</Label>
               <Input
                 id="imageurl"
-                name="imageurl"
-                value={formData.imageurl || ""}
+                name="image_url"
+                value={formData.image_url || ""}
                 onChange={handleInputChange}
                 placeholder="Enter image URL"
               />
@@ -355,8 +351,8 @@ const Index = () => {
               <Label htmlFor="edit-imageurl">Image URL</Label>
               <Input
                 id="edit-imageurl"
-                name="imageurl"
-                value={formData.imageurl || ""}
+                name="image_url"
+                value={formData.image_url || ""}
                 onChange={handleInputChange}
                 placeholder="Enter image URL"
               />
