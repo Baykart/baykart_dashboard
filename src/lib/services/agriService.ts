@@ -1,7 +1,7 @@
 import { AgriService } from '@/types/feeds';
-import { supabase } from '@/lib/supabase';
+import { supabase } from './supabase';
 
-const API_BASE = '/api/v1/agriservices/';
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/agriservices/`;
 
 export async function uploadAgriServiceImage(file: File): Promise<string> {
   const fileExt = file.name.split('.').pop();

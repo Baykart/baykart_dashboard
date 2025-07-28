@@ -1,6 +1,9 @@
 import { supabase } from './supabase';
 
-const API_BASE = '/api/v1/';
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/`;
+
+// Debug: Log the API base URL
+console.log('🔍 DashboardService - API_BASE:', API_BASE);
 
 export interface DashboardStats {
   totalAgriServices: number;

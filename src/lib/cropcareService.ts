@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const API_BASE = '/api/v1/cropcare/';
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/cropcare/`;
 
 export interface CropCareCategory {
   id: string;
