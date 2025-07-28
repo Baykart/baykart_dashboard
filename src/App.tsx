@@ -24,7 +24,7 @@ import { Videos } from "./pages/Videos";
 import GovernmentSchemes from "./pages/GovernmentSchemes";
 import Marketplace from "./pages/Marketplace";
 import CropCare from "./pages/CropCare";
-import AgriServices from "./pages/AgriServices";
+import Agriservices from "./pages/Agriservices";
 import Community from "./pages/Community";
 import FeedReports from "./pages/FeedReports";
 import MarketPrices from "./pages/MarketPrices";
@@ -66,7 +66,7 @@ const App = () => (
                   <Route path="/government-schemes" element={<GovernmentSchemes />} />
                   <Route path="/marketplace" element={<Marketplace />} />
                   <Route path="/crop-care" element={<CropCare />} />
-                  <Route path="/agriservices" element={<AgriServices />} />
+                  <Route path="/agriservices" element={<Agriservices />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/feed-reports" element={<FeedReports />} />
                 <Route path="/feed_reports" element={<FeedReports />} />
