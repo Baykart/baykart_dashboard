@@ -1,226 +1,166 @@
-import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/Sidebar";
-import { Header } from "@/components/Header";
-import { SearchBar } from "@/components/SearchBar";
-import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { CropModal } from "@/components/CropModal";
-import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
-import { 
-  Crop, 
-  CropInput, 
-  getCropsWithFormattedUrls, 
-  createCrop, 
-  updateCrop, 
-  deleteCrop,
-  getFormattedIconUrl
-} from "@/lib/cropService";
-import { supabase } from "@/lib/supabase";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import React, { useState, useEffect } from 'react';
+import { Sidebar } from '@/components/Sidebar';
+import { Header } from '@/components/Header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
+import { farmingService, FarmingCrop } from '@/lib/farmingService';
+import { LoadingSpinner } from '@/components/ui/loading';
+import { Plus, Edit, Trash2, Search, Filter, Grid3X3, List, Star, Package, Calendar } from 'lucide-react';
 
 const Crops = () => {
-  const [crops, setCrops] = useState<Crop[]>([]);
-  const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedCrop, setSelectedCrop] = useState<Crop | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [crops, setCrops] = useState<FarmingCrop[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCrop, setEditingCrop] = useState<FarmingCrop | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    icon_url: '',
+  });
   const { toast } = useToast();
 
-  // Check authentication status
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Error checking auth status:", error);
-          setAuthError("Failed to check authentication status");
-          setIsAuthenticated(false);
-          return;
-        }
-        
-        setIsAuthenticated(!!data.session);
-        if (!data.session) {
-          setAuthError("You need to be signed in to create, edit, or delete crops");
-        }
-      } catch (err) {
-        console.error("Error in auth check:", err);
-        setAuthError("Failed to check authentication status");
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuth();
+    fetchData();
   }, []);
 
-  const fetchCrops = async () => {
-    setIsLoading(true);
+  const fetchData = async () => {
     try {
-      const data = await getCropsWithFormattedUrls();
-      setCrops(data);
-    } catch (error) {
-      console.error("Error fetching crops:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load crops",
-        variant: "destructive",
-      });
+      setLoading(true);
+      const cropsResponse = await farmingService.getCrops();
+      setCrops(cropsResponse.results);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load data');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchCrops();
-  }, []);
-
-  const filteredCrops = crops.filter((crop) =>
-    crop.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleCreateCrop = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be signed in to create crops",
-        variant: "destructive",
-      });
-      return;
-    }
-    setSelectedCrop(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditCrop = (crop: Crop) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be signed in to edit crops",
-        variant: "destructive",
-      });
-      return;
-    }
-    setSelectedCrop(crop);
-    setIsModalOpen(true);
-  };
-
-  const handleDeleteCrop = (crop: Crop) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be signed in to delete crops",
-        variant: "destructive",
-      });
-      return;
-    }
-    setSelectedCrop(crop);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleSaveCrop = async (cropData: CropInput, iconFile?: File) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be signed in to save crops",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsProcessing(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      if (selectedCrop) {
-        // Update existing crop
-        await updateCrop(selectedCrop.id, cropData, iconFile);
+      const cropData = {
+        ...formData,
+      };
+
+      if (editingCrop) {
+        await farmingService.updateCrop(editingCrop.id, cropData);
         toast({
-          title: "Success",
-          description: "Crop updated successfully",
+          title: 'Success',
+          description: 'Crop updated successfully',
         });
       } else {
-        // Create new crop
-        await createCrop(cropData, iconFile);
+        await farmingService.createCrop(cropData);
         toast({
-          title: "Success",
-          description: "Crop created successfully",
+          title: 'Success',
+          description: 'Crop created successfully',
         });
       }
-      // Refresh the crops list
-      await fetchCrops();
-    } catch (error: any) {
-      console.error("Error saving crop:", error);
-      
-      // Provide more specific error messages
-      let errorMessage = `Failed to ${selectedCrop ? "update" : "create"} crop`;
-      
-      if (error.message?.includes("violates row-level security policy")) {
-        errorMessage = "Permission denied. Make sure you're signed in with the correct account.";
-      } else if (error.code === "42501") {
-        errorMessage = "You don't have permission to perform this action.";
-      } else if (error.code === "23505") {
-        errorMessage = "A crop with this name already exists.";
-      }
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
+      setIsDialogOpen(false);
+      setEditingCrop(null);
+      setFormData({
+        name: '',
+        category: '',
+        icon_url: '',
       });
-    } finally {
-      setIsProcessing(false);
+      fetchData();
+    } catch (err) {
+      console.error('Error saving crop:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to save crop',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleConfirmDelete = async () => {
-    if (!selectedCrop) return;
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be signed in to delete crops",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleEdit = (crop: FarmingCrop) => {
+    setEditingCrop(crop);
+    setFormData({
+      name: crop.name,
+      category: crop.category,
+      icon_url: crop.icon_url || '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this crop?')) return;
     
-    setIsProcessing(true);
     try {
-      await deleteCrop(selectedCrop.id);
+      await farmingService.deleteCrop(id);
       toast({
-        title: "Success",
-        description: "Crop deleted successfully",
+        title: 'Success',
+        description: 'Crop deleted successfully',
       });
-      // Refresh the crops list
-      await fetchCrops();
-      setIsDeleteDialogOpen(false);
-    } catch (error: any) {
-      console.error("Error deleting crop:", error);
-      
-      // Provide more specific error messages
-      let errorMessage = "Failed to delete crop";
-      
-      if (error.message?.includes("violates row-level security policy")) {
-        errorMessage = "Permission denied. Make sure you're signed in with the correct account.";
-      } else if (error.code === "42501") {
-        errorMessage = "You don't have permission to perform this action.";
-      }
-      
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting crop:', err);
       toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to delete crop',
+        variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  // Format category for display
-  const formatCategory = (category: string) => {
-    return category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
-  };
+  const filteredCrops = crops.filter(crop => {
+    const matchesSearch = crop.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || !selectedCategory || crop.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="container mx-auto px-6 py-8">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <LoadingSpinner size="lg" className="mx-auto mb-4" />
+                  <p className="text-gray-600">Loading crops...</p>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="container mx-auto px-6 py-8">
+              <div className="text-center">
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={fetchData}>Retry</Button>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -229,161 +169,205 @@ const Crops = () => {
         <Header />
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="container mx-auto px-6 py-8">
-            {authError && (
-              <Alert variant="warning" className="mb-6">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Authentication Warning</AlertTitle>
-                <AlertDescription>
-                  {authError}
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-2xl font-semibold text-gray-900">Crops</h1>
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-white"
-                onClick={handleCreateCrop}
-                disabled={isAuthenticated === false}
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                CREATE NEW CROP
-              </Button>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Crops</h1>
+                <p className="text-gray-600 mt-2">Manage crops and seeds in the marketplace</p>
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => {
+                    setEditingCrop(null);
+                    setFormData({
+                      name: '',
+                      category: '',
+                      icon_url: '',
+                    });
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Crop
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingCrop ? 'Edit Crop' : 'Add New Crop'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Enter crop name"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="category">Category</Label>
+                        <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="grains">Grains</SelectItem>
+                            <SelectItem value="vegetables">Vegetables</SelectItem>
+                            <SelectItem value="fruits">Fruits</SelectItem>
+                            <SelectItem value="legumes">Legumes</SelectItem>
+                            <SelectItem value="tubers">Tubers</SelectItem>
+                            <SelectItem value="cash_crops">Cash Crops</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="icon_url">Icon URL (optional)</Label>
+                      <Input
+                        id="icon_url"
+                        value={formData.icon_url}
+                        onChange={(e) => setFormData({ ...formData, icon_url: e.target.value })}
+                        placeholder="e.g., https://example.com/icon.png"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit">
+                        {editingCrop ? 'Update' : 'Create'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
-            <div className="mb-6">
-              <SearchBar 
-                value={search} 
-                onChange={setSearch} 
-              />
-            </div>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Crop
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Icon
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center">
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : filteredCrops.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center">
-                        No crops found
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredCrops.map((crop) => (
-                      <tr key={crop.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {crop.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <img
-                            src={getFormattedIconUrl(crop.icon_url) || "/placeholder.svg"}
-                            alt={crop.name}
-                            className="h-10 w-10 rounded-full object-cover"
-                            onError={(e) => {
-                              console.log(`Icon failed to load: ${crop.icon_url}`);
-                              e.currentTarget.src = "/placeholder.svg";
-                            }}
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCategory(crop.category)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-primary hover:text-primary-foreground hover:bg-primary"
-                              onClick={() => handleEditCrop(crop)}
-                              disabled={isAuthenticated === false}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                              onClick={() => handleDeleteCrop(crop)}
-                              disabled={isAuthenticated === false}
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-              <div className="px-6 py-4 border-t border-gray-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    {filteredCrops.length > 0 ? `1-${filteredCrops.length} of ${filteredCrops.length}` : "0 items"}
-                  </span>
-                  <div className="space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-600"
-                      disabled
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-600"
-                      disabled
-                    >
-                      Next
-                    </Button>
+
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search crops..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="grains">Grains</SelectItem>
+                      <SelectItem value="vegetables">Vegetables</SelectItem>
+                      <SelectItem value="fruits">Fruits</SelectItem>
+                      <SelectItem value="legumes">Legumes</SelectItem>
+                      <SelectItem value="tubers">Tubers</SelectItem>
+                      <SelectItem value="cash_crops">Cash Crops</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
+
+            {/* Products */}
+            {filteredCrops.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Package className="h-12 w-12 mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No crops found</h3>
+                <p className="text-gray-600">
+                  {searchTerm || selectedCategory ? 'Try adjusting your filters.' : 'Get started by adding your first crop.'}
+                </p>
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                {filteredCrops.map((crop) => (
+                  <Card key={crop.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{crop.name}</CardTitle>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline">{crop.category_display}</Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(crop)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(crop.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {crop.icon_url && (
+                        <div className="mb-3">
+                          <img
+                            src={crop.icon_url}
+                            alt={crop.name}
+                            className="w-full h-32 object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold text-green-600">{crop.category_display}</span>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500">
+                          Created: {new Date(crop.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
-
-      {/* Crop Modal */}
-      <CropModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveCrop}
-        crop={selectedCrop || undefined}
-        title={selectedCrop ? "Edit Crop" : "Create New Crop"}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={handleConfirmDelete}
-        title="Delete Crop"
-        description={`Are you sure you want to delete ${selectedCrop?.name}? This action cannot be undone.`}
-        isLoading={isProcessing}
-      />
     </div>
   );
 };

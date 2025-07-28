@@ -5,7 +5,7 @@ import EventCard from '../components/EventCard';
 import EventForm from '../components/EventForm';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Separator } from '../components/ui/separator';
@@ -246,6 +246,9 @@ const Events = () => {
                   <DialogTitle>
                     {selectedEvent ? 'Edit Event' : 'Create New Event'}
                   </DialogTitle>
+                  <DialogDescription>
+                    {selectedEvent ? 'Edit the details of your event below.' : 'Fill out the form to create a new event.'}
+                  </DialogDescription>
                 </DialogHeader>
                 <EventForm
                   event={selectedEvent}

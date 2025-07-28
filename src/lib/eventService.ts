@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
 import { Event } from '../types/supabase';
+import { getCurrentSession } from './authService';
 
 export interface EventInput {
   title: string;
@@ -16,234 +16,125 @@ export interface EventInput {
   is_online: boolean;
 }
 
-// Get all events
+const API_URL = '/api/v1/events/events/';
+
 export const getEvents = async (): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching events:', error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(API_URL, { headers });
+  if (!res.ok) throw new Error('Failed to fetch events');
+  const data = await res.json();
+  // DRF paginated response
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get upcoming events
 export const getUpcomingEvents = async (): Promise<Event[]> => {
   const today = new Date().toISOString().split('T')[0];
-  
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .gte('event_date', today)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching upcoming events:', error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?event_date__gte=${today}`, { headers });
+  if (!res.ok) throw new Error('Failed to fetch upcoming events');
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get events by type
 export const getEventsByType = async (eventType: string): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('event_type', eventType)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error(`Error fetching events of type ${eventType}:`, error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?event_type=${eventType}`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch events of type ${eventType}`);
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get events by category
 export const getEventsByCategory = async (category: string): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('category', category)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error(`Error fetching events in category ${category}:`, error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?category=${category}`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch events in category ${category}`);
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get events by location
 export const getEventsByLocation = async (city: string): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('city', city)
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error(`Error fetching events in city ${city}:`, error);
-    throw error;
-  }
-
-  return data || [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}?city=${city}`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch events in city ${city}`);
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : data;
 };
 
 // Get a single event by ID
 export const getEventById = async (id: string): Promise<Event | null> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    console.error(`Error fetching event with ID ${id}:`, error);
-    throw error;
-  }
-
-  return data;
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${id}/`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch event with ID ${id}`);
+  return await res.json();
 };
 
-// Create a new event
 export const createEvent = async (event: EventInput, imageFile?: File): Promise<Event> => {
-  let imageUrl = null;
-
-  // Upload image if provided
   if (imageFile) {
-    try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('event_images')
-        .upload(filePath, imageFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError);
-        throw uploadError;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('event_images')
-        .getPublicUrl(filePath);
-
-      imageUrl = publicUrlData.publicUrl;
-    } catch (error) {
-      console.error('Error handling image upload:', error);
-      console.warn('Continuing with event creation without image.');
-    }
+    const body = new FormData();
+    Object.entries(event).forEach(([k, v]) => body.append(k, v as any));
+    body.append('image', imageFile);
+    const headers = await getAuthHeaders(); // Only the Authorization header
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body,
+      headers,
+    });
+    if (!res.ok) throw new Error('Failed to create event');
+    return await res.json();
+  } else {
+    // Use JSON for no-image case
+    const headers = { ...(await getAuthHeaders()), 'Content-Type': 'application/json' };
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(event),
+      headers,
+    });
+    if (!res.ok) throw new Error('Failed to create event');
+    return await res.json();
   }
-
-  // Create event with image URL (or null if upload failed)
-  const { data, error } = await supabase
-    .from('events')
-    .insert([{ ...event, image_url: imageUrl }])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating event:', error);
-    throw error;
-  }
-
-  return data;
 };
 
-// Update an existing event
 export const updateEvent = async (id: string, event: Partial<EventInput>, imageFile?: File): Promise<Event> => {
-  let updates: any = { ...event };
-
-  // Upload new image if provided
   if (imageFile) {
-    try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('event_images')
-        .upload(filePath, imageFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError);
-        throw uploadError;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('event_images')
-        .getPublicUrl(filePath);
-
-      updates.image_url = publicUrlData.publicUrl;
-    } catch (error) {
-      console.error('Error handling image upload:', error);
-      console.warn('Continuing with event update without new image.');
-    }
+    const body = new FormData();
+    Object.entries(event).forEach(([k, v]) => body.append(k, v as any));
+    body.append('image', imageFile);
+    const headers = await getAuthHeaders(); // Only the Authorization header
+    const res = await fetch(`${API_URL}${id}/`, {
+      method: 'PUT',
+      body,
+      headers,
+    });
+    if (!res.ok) throw new Error('Failed to update event');
+    return await res.json();
+  } else {
+    // Use JSON for no-image case
+    const headers = { ...(await getAuthHeaders()), 'Content-Type': 'application/json' };
+    const res = await fetch(`${API_URL}${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(event),
+      headers,
+    });
+    if (!res.ok) throw new Error('Failed to update event');
+    return await res.json();
   }
-
-  // Update event with new data
-  const { data, error } = await supabase
-    .from('events')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(`Error updating event with ID ${id}:`, error);
-    throw error;
-  }
-
-  return data;
 };
 
-// Delete an event
 export const deleteEvent = async (id: string): Promise<void> => {
-  // First get the event to find the image URL
-  const event = await getEventById(id);
-  
-  // Delete the record
-  const { error } = await supabase
-    .from('events')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error(`Error deleting event with ID ${id}:`, error);
-    throw error;
-  }
-
-  // If there was an image and it was stored in our bucket, try to delete it
-  if (event?.image_url) {
-    try {
-      const imagePath = event.image_url.split('/').pop();
-      if (imagePath) {
-        const { error: storageError } = await supabase.storage
-          .from('event_images')
-          .remove([imagePath]);
-          
-        if (storageError) {
-          // Just log the error but don't throw - the event record is already deleted
-          console.error('Error deleting image:', storageError);
-        }
-      }
-    } catch (err) {
-      console.error('Error parsing image URL for deletion:', err);
-    }
-  }
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${id}/`, { method: 'DELETE', headers });
+  if (!res.ok) throw new Error('Failed to delete event');
 }; 
+
+async function getAuthHeaders() {
+  const session = await getCurrentSession();
+  if (!session) throw new Error('Not authenticated');
+  console.log('Using access token:', session.access_token); // Debug log
+  return {
+    Authorization: `Bearer ${session.access_token}`,
+  };
+} 

@@ -1,4 +1,7 @@
 import { supabase } from '@/lib/supabase';
+import { getValidSession } from './authService';
+
+const API_BASE = '/api/v1/market-prices/';
 
 export interface MarketPrice {
   id: string;
@@ -12,79 +15,54 @@ export interface MarketPrice {
   created_at: string;
 }
 
+async function getAuthHeaders() {
+  const session = await getValidSession();
+  if (!session) throw new Error('Not authenticated');
+  return { Authorization: `Bearer ${session.access_token}` };
+}
+
 export const marketPriceService = {
-  async getMarketPrices(): Promise<MarketPrice[]> {
-    const { data, error } = await supabase
-      .from('market_prices')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error) throw error;
-    return data;
+  async getMarketPrices() {
+    const res = await fetch(API_BASE);
+    if (!res.ok) throw new Error('Failed to fetch market prices');
+    return res.json();
   },
-
-  async getMarketPrice(id: string): Promise<MarketPrice> {
-    const { data, error } = await supabase
-      .from('market_prices')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data;
+  async getMarketPrice(id: string) {
+    const res = await fetch(`${API_BASE}${id}/`);
+    if (!res.ok) throw new Error('Failed to fetch market price');
+    return res.json();
   },
-
-  async createMarketPrice(marketPrice: Omit<MarketPrice, 'id' | 'created_at'>): Promise<MarketPrice> {
-    const { data, error } = await supabase
-      .from('market_prices')
-      .insert([marketPrice])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async createMarketPrice(marketPrice) {
+    const headers = { ...(await getAuthHeaders()), 'Content-Type': 'application/json' };
+    const res = await fetch(API_BASE, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(marketPrice),
+    });
+    if (!res.ok) {
+      let errorMsg = 'Failed to create market price';
+      try {
+        const errorData = await res.json();
+        errorMsg += ': ' + JSON.stringify(errorData);
+      } catch {}
+      throw new Error(errorMsg);
+    }
+    return res.json();
   },
-
-  async updateMarketPrice(id: string, marketPrice: Partial<MarketPrice>): Promise<MarketPrice> {
-    const { data, error } = await supabase
-      .from('market_prices')
-      .update(marketPrice)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async updateMarketPrice(id, marketPrice) {
+    const headers = { ...(await getAuthHeaders()), 'Content-Type': 'application/json' };
+    const res = await fetch(`${API_BASE}${id}/`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(marketPrice),
+    });
+    if (!res.ok) throw new Error('Failed to update market price');
+    return res.json();
   },
-
-  async deleteMarketPrice(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('market_prices')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+  async deleteMarketPrice(id) {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}${id}/`, { method: 'DELETE', headers });
+    if (!res.ok) throw new Error('Failed to delete market price');
   },
-
-  async getLatestPrices(): Promise<MarketPrice[]> {
-    const { data, error } = await supabase
-      .from('market_prices')
-      .select('*')
-      .order('date', { ascending: false })
-      .limit(10);
-
-    if (error) throw error;
-    return data;
-  },
-
-  async getPricesByCrop(crop: string): Promise<MarketPrice[]> {
-    const { data, error } = await supabase
-      .from('market_prices')
-      .select('*')
-      .eq('crop', crop)
-      .order('date', { ascending: false });
-
-    if (error) throw error;
-    return data;
-  }
+  // Add more methods as needed for trends, analytics, etc.
 }; 

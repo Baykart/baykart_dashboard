@@ -1,164 +1,146 @@
-import { supabase } from '@/lib/supabase';
-import { Product, ProductRating } from '../types/supabase';
+import { supabase } from './supabase';
 
-export interface ProductInput {
-  name: string;
-  category: string;
-  subcategory?: string;
-  price: number;
-  currency: string;
-  stock_quantity: number;
-  unit: string;
-  description?: string;
-  sowing_season?: string;
-  sowing_method?: string;
-  spacing?: string;
-  maturity_days?: number;
-  is_bestseller?: boolean;
-}
+const API_BASE = '/api/v1/';
 
 export interface Product {
   id: string;
   name: string;
+  description: string | null;
+  price: string;
   category: string;
-  subcategory?: string;
-  price: number;
-  currency: string;
+  category_name: string;
+  location: string | null;
   stock_quantity: number;
-  unit: string;
-  description?: string;
-  sowing_season?: string;
-  sowing_method?: string;
-  spacing?: string;
-  maturity_days?: number;
-  image_url?: string;
-  is_bestseller: boolean;
+  sowing_season: string | null;
+  sowing_method: string | null;
+  maturity_days: number | null;
+  status: string;
+  stock_unit: string | null;
+  compare_price: string | null;
+  slug: string | null;
   created_at: string;
   updated_at: string;
+  featured: boolean;
+  seller: number;
+  primary_image: string | null;
+  average_rating: number;
+  review_count?: number;
+}
+
+export interface ProductResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Product[];
+}
+
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+  return { Authorization: `Bearer ${token}` };
 }
 
 export const productService = {
-  async getProducts(): Promise<Product[]> {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+  async getProducts(params?: {
+    category?: string;
+    search?: string;
+    featured?: boolean;
+    sort?: string;
+    page?: number;
+  }): Promise<ProductResponse> {
+    try {
+      const url = new URL(`${API_BASE}products/`, window.location.origin);
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            url.searchParams.append(key, value.toString());
+          }
+        });
+      }
 
-    if (error) throw error;
-    return data;
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    }
   },
 
   async getProduct(id: string): Promise<Product> {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`${API_BASE}products/${id}/`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      throw error;
+    }
   },
 
-  async createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
-    const { data, error } = await supabase
-      .from('products')
-      .insert([product])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async createProduct(productData: Partial<Product>): Promise<Product> {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE}products/`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to create product: ${JSON.stringify(errorData)}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
   },
 
-  async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
-    const { data, error } = await supabase
-      .from('products')
-      .update(product)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async updateProduct(id: string, productData: Partial<Product>): Promise<Product> {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE}products/${id}/`, {
+        method: 'PUT',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to update product: ${JSON.stringify(errorData)}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
   },
 
   async deleteProduct(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE}products/${id}/`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to delete product: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
   },
-
-  async getBestsellers(): Promise<Product[]> {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_bestseller', true)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data;
-  }
-};
-
-// Get products by category
-export const getProductsByCategory = async (category: string): Promise<Product[]> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('category', category)
-    .order('name');
-
-  if (error) {
-    console.error(`Error fetching products in category ${category}:`, error);
-    throw error;
-  }
-
-  return data || [];
-};
-
-// Get product ratings
-export const getProductRatings = async (productId: string): Promise<ProductRating[]> => {
-  const { data, error } = await supabase
-    .from('product_ratings')
-    .select('*')
-    .eq('product_id', productId)
-    .order('review_date', { ascending: false });
-
-  if (error) {
-    console.error(`Error fetching ratings for product ${productId}:`, error);
-    throw error;
-  }
-
-  return data || [];
-};
-
-// Add a product rating
-export const addProductRating = async (
-  productId: string, 
-  userId: string, 
-  rating: number, 
-  review?: string
-): Promise<ProductRating> => {
-  const { data, error } = await supabase
-    .from('product_ratings')
-    .insert([{
-      product_id: productId,
-      user_id: userId,
-      rating,
-      review,
-      verified_buyer: true, // This would need logic to verify if user has purchased the product
-      review_date: new Date().toISOString()
-    }])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error adding product rating:', error);
-    throw error;
-  }
-
-  return data;
 }; 
