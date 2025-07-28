@@ -32,6 +32,10 @@ export interface AuditLogStats {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// Debug: Log the API URL being used
+console.log('🔍 AuditService - API URL:', API_BASE_URL);
+console.log('🔍 AuditService - Environment variables:', import.meta.env);
+
 // Get audit logs with filtering
 export const getAuditLogs = async (params?: {
   page?: number;
