@@ -81,20 +81,14 @@ const CropCare = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Map category names to their IDs
-      const categoryMap: { [key: string]: string } = {
-        'Seeds': '4ec1b31b-ed94-40a9-83da-0e72146b9ed7',
-        'Agro Chemicals': '787f6cb4-1180-488a-8505-65845da85178',
-        'Crop Protection': '7148a014-c3fa-47c7-849f-999b9f6939d7',
-        'Equipment': 'df82eda4-5ef2-42a9-a375-786c60f796c8',
-        'Other Products': '52429d06-6ae0-412f-a95a-e0cbb2d2e955'
-      };
-      
+      // For now, we'll create products without category and vendor for testing
+      // These will be added when the sample data script runs
       const productData = {
         ...formData,
         stock_quantity: parseInt(formData.stock_quantity.toString()),
-        category: categoryMap[formData.category] || formData.category,
+        category: null, // Will be set when categories are available
         brand: formData.brand, // Keep as string for business name
+        vendor: null, // Will be set when vendors are available
       };
 
       if (editingProduct) {
