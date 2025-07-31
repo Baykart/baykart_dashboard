@@ -171,6 +171,7 @@ export interface Event {
   registration_url?: string;
   is_free: boolean;
   is_online: boolean;
+  status?: 'draft' | 'published' | 'archived';
   created_at: string;
   updated_at: string;
 }

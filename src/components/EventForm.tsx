@@ -37,6 +37,7 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
     registration_url: '',
     is_free: false,
     is_online: false,
+    status: 'published',
   });
 
   const [eventDate, setEventDate] = useState<Date>(new Date());
@@ -62,6 +63,7 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
         registration_url: event.registration_url || '',
         is_free: event.is_free,
         is_online: event.is_online,
+        status: event.status || 'published',
       });
       
       setEventDate(new Date(event.event_date));

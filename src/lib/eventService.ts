@@ -14,6 +14,7 @@ export interface EventInput {
   registration_url?: string;
   is_free: boolean;
   is_online: boolean;
+  status?: 'draft' | 'published' | 'archived';
 }
 
 const API_URL = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/events/events/`;
