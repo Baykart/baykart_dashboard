@@ -74,9 +74,14 @@ export const getEventById = async (id: string): Promise<Event | null> => {
 };
 
 export const createEvent = async (event: EventInput, imageFile?: File): Promise<Event> => {
+  console.log('🔍 createEvent - Event data being sent:', event); // Debug log
+  
   if (imageFile) {
     const body = new FormData();
-    Object.entries(event).forEach(([k, v]) => body.append(k, v as any));
+    Object.entries(event).forEach(([k, v]) => {
+      console.log(`🔍 Adding to FormData: ${k} = ${v}`); // Debug log
+      body.append(k, v as any);
+    });
     body.append('image', imageFile);
     const headers = await getAuthHeaders(); // Only the Authorization header
     const res = await fetch(API_URL, {
@@ -89,6 +94,7 @@ export const createEvent = async (event: EventInput, imageFile?: File): Promise<
   } else {
     // Use JSON for no-image case
     const headers = { ...(await getAuthHeaders()), 'Content-Type': 'application/json' };
+    console.log('🔍 createEvent - JSON payload:', JSON.stringify(event, null, 2)); // Debug log
     const res = await fetch(API_URL, {
       method: 'POST',
       body: JSON.stringify(event),

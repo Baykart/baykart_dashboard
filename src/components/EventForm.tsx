@@ -84,6 +84,8 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
         return !value.trim() ? 'Location is required' : '';
       case 'city':
         return !value.trim() ? 'City is required' : '';
+      case 'status':
+        return !value ? 'Event status is required' : '';
       case 'registration_url':
         if (value && !/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(value)) {
           return 'Please enter a valid URL';
@@ -375,6 +377,31 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
                 </Tooltip>
               </TooltipProvider>
             </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="status" className="text-base">Event Status*</Label>
+              {errors.status && touchedFields.status && (
+                <span className="text-destructive text-xs">{errors.status}</span>
+              )}
+            </div>
+            <Select 
+              value={formData.status} 
+              onValueChange={(value) => handleSelectChange('status', value)}
+            >
+              <SelectTrigger className={cn("mt-1", errors.status && touchedFields.status && "border-destructive")}>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Draft (Not visible to public)</SelectItem>
+                <SelectItem value="published">Published (Visible to public)</SelectItem>
+                <SelectItem value="archived">Archived (No longer active)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-muted-foreground text-xs mt-1">
+              Draft events are only visible to you. Published events are visible to everyone.
+            </p>
           </div>
           
           <div className="flex justify-end mt-4">
