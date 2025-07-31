@@ -29,6 +29,10 @@ export interface CropCareProduct {
   id: string;
   vendor: string;
   vendor_name: string;
+  vendor_phone: string | null;
+  vendor_email: string | null;
+  vendor_address: string | null;
+  vendor_verified: boolean;
   category: string;
   category_name: string;
   brand: string;

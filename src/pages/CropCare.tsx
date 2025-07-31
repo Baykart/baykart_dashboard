@@ -56,6 +56,9 @@ const CropCare = () => {
     stock_quantity: 0,
     category: '',
     brand: '',
+    vendor_phone: '',
+    vendor_email: '',
+    vendor_address: '',
     usage_instructions: '',
     safety_warnings: '',
     image_url: ''
@@ -126,6 +129,9 @@ const CropCare = () => {
         stock_quantity: 0,
         category: '',
         brand: '',
+        vendor_phone: '',
+        vendor_email: '',
+        vendor_address: '',
         usage_instructions: '',
         safety_warnings: '',
         image_url: ''
@@ -151,6 +157,9 @@ const CropCare = () => {
       stock_quantity: product.stock_quantity,
       category: product.category_name,
       brand: product.brand,
+      vendor_phone: product.vendor_phone || '',
+      vendor_email: product.vendor_email || '',
+      vendor_address: product.vendor_address || '',
       usage_instructions: product.usage_instructions || '',
       safety_warnings: product.safety_warnings || '',
       image_url: product.image_url || ''
@@ -242,6 +251,9 @@ const CropCare = () => {
                   stock_quantity: 0,
                   category: '',
                   brand: '',
+                  vendor_phone: '',
+                  vendor_email: '',
+                  vendor_address: '',
                   usage_instructions: '',
                   safety_warnings: '',
                   image_url: ''
@@ -373,6 +385,18 @@ const CropCare = () => {
                                      <span className="text-sm text-gray-500">Vendor:</span>
                                      <span className="text-sm">{product.vendor_name || 'No Vendor'}</span>
                                    </div>
+                                   {product.vendor_phone && (
+                                     <div className="flex justify-between items-center">
+                                       <span className="text-sm text-gray-500">Phone:</span>
+                                       <span className="text-sm">{product.vendor_phone}</span>
+                                     </div>
+                                   )}
+                                   {product.vendor_address && (
+                                     <div className="flex justify-between items-center">
+                                       <span className="text-sm text-gray-500">Location:</span>
+                                       <span className="text-sm">{product.vendor_address}</span>
+                                     </div>
+                                   )}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-500">Rating:</span>
                               <div className="flex items-center">
@@ -410,6 +434,12 @@ const CropCare = () => {
                                          <span className="text-sm text-gray-500">Stock: {product.stock_quantity}</span>
                                          <Badge variant="secondary">{product.category_name || 'No Category'}</Badge>
                                          <span className="text-sm text-gray-500">{product.vendor_name || 'No Vendor'}</span>
+                                         {product.vendor_phone && (
+                                           <span className="text-sm text-gray-500">📞 {product.vendor_phone}</span>
+                                         )}
+                                         {product.vendor_address && (
+                                           <span className="text-sm text-gray-500">📍 {product.vendor_address}</span>
+                                         )}
                                        </div>
                               </div>
                             </div>
@@ -513,6 +543,37 @@ const CropCare = () => {
                                value={formData.brand}
                                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                                placeholder="Enter your business name"
+                               required
+                             />
+                           </div>
+                           <div>
+                             <Label htmlFor="vendor_phone">Contact Phone</Label>
+                             <Input
+                               id="vendor_phone"
+                               value={formData.vendor_phone}
+                               onChange={(e) => setFormData({ ...formData, vendor_phone: e.target.value })}
+                               placeholder="Enter contact phone number"
+                               required
+                             />
+                           </div>
+                           <div>
+                             <Label htmlFor="vendor_email">Contact Email</Label>
+                             <Input
+                               id="vendor_email"
+                               type="email"
+                               value={formData.vendor_email}
+                               onChange={(e) => setFormData({ ...formData, vendor_email: e.target.value })}
+                               placeholder="Enter contact email"
+                               required
+                             />
+                           </div>
+                           <div>
+                             <Label htmlFor="vendor_address">Location/Address</Label>
+                             <Input
+                               id="vendor_address"
+                               value={formData.vendor_address}
+                               onChange={(e) => setFormData({ ...formData, vendor_address: e.target.value })}
+                               placeholder="Enter your location or address"
                                required
                              />
                            </div>
