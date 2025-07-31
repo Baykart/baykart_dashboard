@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useUser } from '@/lib/hooks/use-user';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 import { 
   Users, 
   UserPlus, 
@@ -65,7 +66,8 @@ interface UserStats {
 }
 
 export default function UserManagement() {
-  const { user, accessToken } = useAuth();
+  const { user } = useUser();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +88,22 @@ export default function UserManagement() {
   });
 
   const API_BASE = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth`;
+
+  useEffect(() => {
+    // Get access token from session
+    const getAccessToken = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          setAccessToken(session.access_token);
+        }
+      } catch (error) {
+        console.error('Error getting access token:', error);
+      }
+    };
+
+    getAccessToken();
+  }, [user]);
 
   useEffect(() => {
     if (accessToken) {
