@@ -12,6 +12,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { 
   Heart, 
   MessageCircle, 
   Share2, 
@@ -25,7 +31,9 @@ import {
   Send,
   Camera,
   Video as VideoIcon,
-  MapPin as LocationIcon
+  MapPin as LocationIcon,
+  Trash2,
+  Edit
 } from 'lucide-react';
 
 const FEED_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
@@ -138,6 +146,9 @@ export default function Feeds() {
   async function handleAddComment(postId: number) {
     const text = commentText[postId];
     if (!text) return;
+    
+    console.log('Adding comment:', { post: postId, text });
+    
     const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comments/`, {
       method: 'POST',
       headers: {
@@ -146,15 +157,30 @@ export default function Feeds() {
       },
       body: JSON.stringify({ post: postId, text }),
     });
+    
+    console.log('Comment response status:', res.status);
+    
     if (res.ok) {
+      const data = await res.json();
+      console.log('Comment added successfully:', data);
       setCommentText((prev) => ({ ...prev, [postId]: '' }));
       setShowCommentInput((prev) => ({ ...prev, [postId]: false }));
       fetchPosts(1, true);
       toast({ title: 'Comment added! 💬' });
-    } else if (res.status === 401) setError('You must be logged in to comment.');
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Comment error:', errorData);
+      if (res.status === 401) {
+        setError('You must be logged in to comment.');
+      } else {
+        toast({ title: 'Failed to add comment', description: errorData.detail || 'Unknown error', variant: 'destructive' });
+      }
+    }
   }
 
   async function handleReport(postId: number, reason: FeedReportReason, description: string) {
+    console.log('Reporting post:', { postId, reason, description });
+    
     const res = await fetch(`${FEED_API}${postId}/report/`, {
       method: 'POST',
       headers: {
@@ -163,10 +189,23 @@ export default function Feeds() {
       },
       body: JSON.stringify({ reason, description }),
     });
+    
+    console.log('Report response status:', res.status);
+    
     if (res.ok) {
+      const data = await res.json();
+      console.log('Report submitted successfully:', data);
       setReporting(null);
       toast({ title: 'Post reported successfully' });
-    } else if (res.status === 401) setError('You must be logged in to report posts.');
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Report error:', errorData);
+      if (res.status === 401) {
+        setError('You must be logged in to report posts.');
+      } else {
+        toast({ title: 'Failed to report post', description: errorData.detail || 'Unknown error', variant: 'destructive' });
+      }
+    }
   }
 
   const formatTimeAgo = (timestamp: string) => {
@@ -315,11 +354,27 @@ export default function Feeds() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
+                                                <div className="flex items-center space-x-1">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {user?.email === post.user && (
+                                  <DropdownMenuItem onClick={() => handleDelete(post.id)}>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Post
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={() => setReporting({ postId: post.id, reason: 'spam', description: '' })}>
+                                  <Flag className="h-4 w-4 mr-2" />
+                                  Report Post
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                     </div>
                   </CardHeader>
                   
