@@ -277,9 +277,9 @@ export default function FeedReports() {
     setExpandedReports(newExpanded);
   };
 
-  // Use demo data if no real reports exist
-  const reportsToShow = reports.length > 0 ? reports : (showDemo ? demoReports : []);
-  const postsToShow = reports.length > 0 ? posts : (showDemo ? demoPosts : {});
+  // Use demo data if not admin or if showDemo is true
+  const reportsToShow = (!isAdmin || showDemo) ? demoReports : reports;
+  const postsToShow = (!isAdmin || showDemo) ? demoPosts : posts;
 
   const filteredReports = reportsToShow.filter(report => {
     const matchesStatus = filters.status === 'all' || report.is_resolved === (filters.status === 'resolved');
@@ -327,14 +327,14 @@ export default function FeedReports() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md mx-auto p-6">
               <div className="mb-4">
-                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Demo Mode</h1>
                 <p className="text-gray-600 mb-4">
-                  This page requires administrator privileges. Please contact your system administrator if you believe you should have access.
+                  Admin authentication is not configured. Showing demo data for testing purposes.
                 </p>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
@@ -343,11 +343,19 @@ export default function FeedReports() {
                   <p className="text-sm text-blue-800 mt-1">
                     <strong>Admin Status:</strong> {isAdmin ? 'Yes' : 'No'}
                   </p>
+                  <p className="text-sm text-blue-800 mt-1">
+                    <strong>Mode:</strong> Demo (showing sample data)
+                  </p>
                 </div>
               </div>
-              <Button onClick={() => window.history.back()} variant="outline">
-                Go Back
-              </Button>
+              <div className="space-y-2">
+                <Button onClick={() => setShowDemo(true)} className="bg-green-600 hover:bg-green-700">
+                  View Demo Reports
+                </Button>
+                <Button onClick={() => window.history.back()} variant="outline">
+                  Go Back
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -363,9 +371,13 @@ export default function FeedReports() {
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="container mx-auto px-6 py-8">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold">Feed Reports</h1>
+              <h1 className="text-2xl font-bold">
+                Feed Reports
+                {!isAdmin && <Badge variant="secondary" className="ml-2">Demo Mode</Badge>}
+              </h1>
               <div className="text-sm text-gray-500">
-                {filteredReports.length} of {reports.length} reports
+                {filteredReports.length} of {reportsToShow.length} reports
+                {!isAdmin && <span className="ml-2 text-yellow-600">(Demo Data)</span>}
               </div>
             </div>
 
