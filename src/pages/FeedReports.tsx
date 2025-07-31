@@ -16,8 +16,7 @@ import { ChevronDown, ChevronRight, Eye, CheckCircle, Trash2, UserX, Filter, Sea
 
 const REPORTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/reports/`;
 const POSTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
-const ME_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/me/`;
-const ADMIN_STATUS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/admin-status/`;
+const ME_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/users/me/`;
 
 interface ReportFilters {
   status: string;
@@ -130,38 +129,22 @@ export default function FeedReports() {
           return;
         }
         
-        // Try the admin status endpoint first
-        const adminRes = await fetch(ADMIN_STATUS_API, {
+        // Check admin status via me endpoint
+        const meRes = await fetch(ME_API, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        if (adminRes.ok) {
-          const adminData = await adminRes.json();
-          console.log('Admin status result:', adminData);
-          const adminStatus = adminData.isAdmin || adminData.isSuperuser;
+        if (meRes.ok) {
+          const me = await meRes.json();
+          console.log('Django /api/v1/auth/users/me/ result:', me);
+          const adminStatus = !!me.is_staff || !!me.is_superuser;
           setIsAdmin(adminStatus);
           console.log('isAdmin:', adminStatus);
           if (adminStatus) {
             fetchReports(token);
           }
         } else {
-          // Fallback to me endpoint
-          const meRes = await fetch(ME_API, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          
-          if (meRes.ok) {
-            const me = await meRes.json();
-            console.log('Django /api/v1/auth/me/ result:', me);
-            const adminStatus = !!me.is_staff || !!me.is_superuser;
-            setIsAdmin(adminStatus);
-            console.log('isAdmin:', adminStatus);
-            if (adminStatus) {
-              fetchReports(token);
-            }
-          } else {
-            console.error('Failed to fetch user profile:', meRes.status, meRes.statusText);
-          }
+          console.error('Failed to fetch user profile:', meRes.status, meRes.statusText);
         }
       } catch (e) {
         console.error('Error checking admin status:', e);
