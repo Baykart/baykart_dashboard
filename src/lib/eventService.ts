@@ -16,7 +16,7 @@ export interface EventInput {
   is_online: boolean;
 }
 
-const API_URL = '/api/v1/events/events/';
+const API_URL = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/events/events/`;
 
 export const getEvents = async (): Promise<Event[]> => {
   const headers = await getAuthHeaders();
