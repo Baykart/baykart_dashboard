@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 
-const FEED_API = '/api/v1/feeds/posts/';
+const FEED_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
 const PAGE_SIZE = 20;
 
 export default function Feeds() {
@@ -120,7 +120,7 @@ export default function Feeds() {
   async function handleAddComment(postId: number) {
     const text = commentText[postId];
     if (!text) return;
-    const res = await fetch('/api/v1/feeds/comments/', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comments/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

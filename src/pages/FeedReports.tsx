@@ -14,9 +14,9 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { ChevronDown, ChevronRight, Eye, CheckCircle, Trash2, UserX, Filter, Search } from 'lucide-react';
 
-const REPORTS_API = '/api/v1/feeds/reports/';
-const POSTS_API = '/api/v1/feeds/posts/';
-const ME_API = '/api/v1/auth/me/';
+const REPORTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/reports/`;
+const POSTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
+const ME_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/me/`;
 
 interface ReportFilters {
   status: string;

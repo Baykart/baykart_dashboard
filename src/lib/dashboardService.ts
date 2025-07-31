@@ -288,7 +288,7 @@ export const dashboardService = {
 
   async getSystemStats(): Promise<SystemStats> {
     try {
-      const healthResponse = await fetch('/health/');
+      const healthResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/health/`);
       const healthData = await healthResponse.json();
       
       return {
