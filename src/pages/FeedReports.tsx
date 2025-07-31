@@ -17,6 +17,7 @@ import { ChevronDown, ChevronRight, Eye, CheckCircle, Trash2, UserX, Filter, Sea
 const REPORTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/reports/`;
 const POSTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
 const ME_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/me/`;
+const ADMIN_STATUS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/admin-status/`;
 
 interface ReportFilters {
   status: string;
@@ -129,21 +130,38 @@ export default function FeedReports() {
           return;
         }
         
-        const meRes = await fetch(ME_API, {
+        // Try the admin status endpoint first
+        const adminRes = await fetch(ADMIN_STATUS_API, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        if (meRes.ok) {
-          const me = await meRes.json();
-          console.log('Django /api/v1/auth/me/ result:', me);
-          const adminStatus = !!me.is_staff || !!me.is_superuser;
+        if (adminRes.ok) {
+          const adminData = await adminRes.json();
+          console.log('Admin status result:', adminData);
+          const adminStatus = adminData.isAdmin || adminData.isSuperuser;
           setIsAdmin(adminStatus);
           console.log('isAdmin:', adminStatus);
           if (adminStatus) {
             fetchReports(token);
           }
         } else {
-          console.error('Failed to fetch user profile:', meRes.status, meRes.statusText);
+          // Fallback to me endpoint
+          const meRes = await fetch(ME_API, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          if (meRes.ok) {
+            const me = await meRes.json();
+            console.log('Django /api/v1/auth/me/ result:', me);
+            const adminStatus = !!me.is_staff || !!me.is_superuser;
+            setIsAdmin(adminStatus);
+            console.log('isAdmin:', adminStatus);
+            if (adminStatus) {
+              fetchReports(token);
+            }
+          } else {
+            console.error('Failed to fetch user profile:', meRes.status, meRes.statusText);
+          }
         }
       } catch (e) {
         console.error('Error checking admin status:', e);
@@ -302,9 +320,37 @@ export default function FeedReports() {
 
   if (!isAdmin) {
     return (
-      <div className="container mx-auto py-6">
-        <h1 className="text-2xl font-bold">Feed Reports</h1>
-        <p>Access denied. You need admin privileges to view this page.</p>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-md mx-auto p-6">
+              <div className="mb-4">
+                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h1>
+                <p className="text-gray-600 mb-4">
+                  This page requires administrator privileges. Please contact your system administrator if you believe you should have access.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Current User:</strong> {user?.email || 'Not logged in'}
+                  </p>
+                  <p className="text-sm text-blue-800 mt-1">
+                    <strong>Admin Status:</strong> {isAdmin ? 'Yes' : 'No'}
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => window.history.back()} variant="outline">
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
