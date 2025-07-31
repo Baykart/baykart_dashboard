@@ -27,6 +27,7 @@ import CropCare from "./pages/CropCare";
 import Agriservices from "./pages/Agriservices";
 import Community from "./pages/Community";
 import FeedReports from "./pages/FeedReports";
+import UserManagement from "./pages/UserManagement";
 import MarketPrices from "./pages/MarketPrices";
 import AuditLogs from "./pages/AuditLogs";
 import TestPage from "./pages/TestPage";
@@ -70,6 +71,7 @@ const App = () => (
                   <Route path="/community" element={<Community />} />
                   <Route path="/feed-reports" element={<FeedReports />} />
                 <Route path="/feed_reports" element={<FeedReports />} />
+                  <Route path="/user-management" element={<UserManagement />} />
                   <Route path="/market-prices" element={<MarketPrices />} />
                 <Route path="/market_prices" element={<MarketPrices />} />
                   <Route path="/audit-logs" element={<AuditLogs />} />

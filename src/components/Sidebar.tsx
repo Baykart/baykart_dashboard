@@ -32,6 +32,7 @@ const navigation = [
   { name: "Community", href: "/community", icon: UsersRound },
   
   // System
+  { name: "User Management", href: "/user-management", icon: Users },
   { name: "Audit Logs", href: "/audit-logs", icon: Shield },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

@@ -604,7 +604,7 @@ const MarketPrices = () => {
                       onChange={(e) => setFormData({ ...formData, previous_price: e.target.value })}
                       placeholder="Previous price"
                     />
-                  </div>
+              </div>
             </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
