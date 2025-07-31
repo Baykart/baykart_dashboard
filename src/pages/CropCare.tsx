@@ -7,7 +7,8 @@ import { Plus, Edit, Trash2, Loader2, Search, Grid3X3, List, Star, Package, Cale
 import { useToast } from "@/components/ui/use-toast";
 import { 
   cropcareService,
-  CropCareProduct
+  CropCareProduct,
+  CropCareCategory
 } from "@/lib/cropcareService";
 import { 
   Dialog, 
@@ -38,11 +39,12 @@ import { LoadingSpinner } from '@/components/ui/loading';
 
 const CropCare = () => {
   const [products, setProducts] = useState<CropCareProduct[]>([]);
+  const [categories, setCategories] = useState<CropCareCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedBrand, setSelectedBrand] = useState<string>('all');
+  const [selectedVendor, setSelectedVendor] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<CropCareProduct | null>(null);
@@ -62,7 +64,17 @@ const CropCare = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await cropcareService.getCategories();
+      setCategories(response.results);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -170,12 +182,12 @@ const CropCare = () => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category_name === selectedCategory;
-    const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand;
-    return matchesSearch && matchesCategory && matchesBrand;
+    const matchesVendor = selectedVendor === 'all' || product.vendor_name === selectedVendor;
+    return matchesSearch && matchesCategory && matchesVendor;
   });
 
-  const uniqueCategories = [...new Set(products.map(p => p.category_name))];
-  const uniqueBrands = [...new Set(products.map(p => p.brand))];
+  const uniqueCategories = [...new Set(products.map(p => p.category_name).filter(Boolean))];
+  const uniqueVendors = [...new Set(products.map(p => p.vendor_name).filter(Boolean))];
 
   if (loading) {
     return (
@@ -262,19 +274,19 @@ const CropCare = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        {uniqueCategories.map(category => (
-                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        {categories.map(category => (
+                          <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                    <Select value={selectedVendor} onValueChange={setSelectedVendor}>
                       <SelectTrigger className="w-48">
-                        <SelectValue placeholder="All Businesses" />
+                        <SelectValue placeholder="All Vendors" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Businesses</SelectItem>
-                        {uniqueBrands.map(brand => (
-                          <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                        <SelectItem value="all">All Vendors</SelectItem>
+                        {uniqueVendors.map(vendor => (
+                          <SelectItem key={vendor} value={vendor}>{vendor}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -355,11 +367,11 @@ const CropCare = () => {
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-500">Category:</span>
-                              <Badge variant="secondary">{product.category_name}</Badge>
+                              <Badge variant="secondary">{product.category_name || 'No Category'}</Badge>
                             </div>
                                                                <div className="flex justify-between items-center">
-                                     <span className="text-sm text-gray-500">Business:</span>
-                                     <span className="text-sm">{product.brand}</span>
+                                     <span className="text-sm text-gray-500">Vendor:</span>
+                                     <span className="text-sm">{product.vendor_name || 'No Vendor'}</span>
                                    </div>
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-500">Rating:</span>
@@ -396,8 +408,8 @@ const CropCare = () => {
                                                                                                         <div className="flex items-center space-x-4 mt-2">
                                          <span className="text-sm text-gray-500">D{product.price} per {product.unit}</span>
                                          <span className="text-sm text-gray-500">Stock: {product.stock_quantity}</span>
-                                         <Badge variant="secondary">{product.category_name}</Badge>
-                                         <span className="text-sm text-gray-500">{product.brand}</span>
+                                         <Badge variant="secondary">{product.category_name || 'No Category'}</Badge>
+                                         <span className="text-sm text-gray-500">{product.vendor_name || 'No Vendor'}</span>
                                        </div>
                               </div>
                             </div>
