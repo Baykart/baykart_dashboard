@@ -33,7 +33,10 @@ import {
   Video as VideoIcon,
   MapPin as LocationIcon,
   Trash2,
-  Edit
+  Edit,
+  Copy,
+  Mail,
+  ExternalLink
 } from 'lucide-react';
 
 const FEED_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
@@ -227,6 +230,82 @@ export default function Feeds() {
     const files = Array.from(event.target.files || []);
     setNewPostImages(prev => [...prev, ...files]);
   };
+
+  const handleShare = async (post: any) => {
+    const postUrl = `${window.location.origin}/feeds/post/${post.id}`;
+    const shareText = `Check out this post on Baykart: ${post.text?.substring(0, 100)}${post.text?.length > 100 ? '...' : ''}`;
+    
+    try {
+      // Try native sharing first (mobile devices)
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Baykart Post',
+          text: shareText,
+          url: postUrl,
+        });
+        toast({ title: 'Shared successfully! 📤' });
+        return;
+      }
+    } catch (error) {
+      console.log('Native sharing not available or cancelled');
+    }
+
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n\n${postUrl}`);
+      toast({ title: 'Link copied to clipboard! 📋' });
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      toast({ title: 'Failed to copy link', variant: 'destructive' });
+    }
+  };
+
+  const shareOptions = [
+    {
+      name: 'Copy Link',
+      icon: Copy,
+      action: (post: any) => {
+        const postUrl = `${window.location.origin}/feeds/post/${post.id}`;
+        navigator.clipboard.writeText(postUrl);
+        toast({ title: 'Link copied to clipboard! 📋' });
+      }
+    },
+    {
+      name: 'Share on WhatsApp',
+      icon: ExternalLink,
+      action: (post: any) => {
+        const text = encodeURIComponent(`Check out this post on Baykart: ${post.text?.substring(0, 100)}${post.text?.length > 100 ? '...' : ''}`);
+        const url = encodeURIComponent(`${window.location.origin}/feeds/post/${post.id}`);
+        window.open(`https://wa.me/?text=${text}%0A%0A${url}`, '_blank');
+      }
+    },
+    {
+      name: 'Share on Facebook',
+      icon: ExternalLink,
+      action: (post: any) => {
+        const url = encodeURIComponent(`${window.location.origin}/feeds/post/${post.id}`);
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+      }
+    },
+    {
+      name: 'Share on Twitter',
+      icon: ExternalLink,
+      action: (post: any) => {
+        const text = encodeURIComponent(`Check out this post on Baykart: ${post.text?.substring(0, 100)}${post.text?.length > 100 ? '...' : ''}`);
+        const url = encodeURIComponent(`${window.location.origin}/feeds/post/${post.id}`);
+        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+      }
+    },
+    {
+      name: 'Share via Email',
+      icon: Mail,
+      action: (post: any) => {
+        const subject = encodeURIComponent('Check out this Baykart post!');
+        const body = encodeURIComponent(`I found this interesting post on Baykart:\n\n"${post.text}"\n\nView it here: ${window.location.origin}/feeds/post/${post.id}`);
+        window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+      }
+    }
+  ];
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -430,14 +509,30 @@ export default function Feeds() {
                           <span>Comment</span>
                         </Button>
                         
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center space-x-2 text-gray-600 hover:text-green-600"
-                        >
-                          <Share2 className="h-4 w-4" />
-                          <span>Share</span>
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center space-x-2 text-gray-600 hover:text-green-600"
+                            >
+                              <Share2 className="h-4 w-4" />
+                              <span>Share</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {shareOptions.map((option, index) => (
+                              <DropdownMenuItem 
+                                key={index}
+                                onClick={() => option.action(post)}
+                                className="cursor-pointer"
+                              >
+                                <option.icon className="h-4 w-4 mr-2" />
+                                {option.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                       
                       <Button
