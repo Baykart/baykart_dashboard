@@ -44,7 +44,6 @@ const CropCare = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedVendor, setSelectedVendor] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<CropCareProduct | null>(null);
@@ -96,12 +95,13 @@ const CropCare = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // For now, we'll create products without category and vendor for testing
-      // These will be added when the sample data script runs
+      // Map category name to category ID for backend
+      const selectedCategory = categories.find(cat => cat.name === formData.category);
+      
       const productData = {
         ...formData,
         stock_quantity: parseInt(formData.stock_quantity.toString()),
-        category: null, // Will be set when categories are available
+        category: selectedCategory?.id || null,
         brand: formData.brand, // Keep as string for business name
         vendor: null, // Will be set when vendors are available
       };
@@ -191,12 +191,10 @@ const CropCare = () => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category_name === selectedCategory;
-    const matchesVendor = selectedVendor === 'all' || product.vendor_name === selectedVendor;
-    return matchesSearch && matchesCategory && matchesVendor;
+    return matchesSearch && matchesCategory;
   });
 
   const uniqueCategories = [...new Set(products.map(p => p.category_name).filter(Boolean))];
-  const uniqueVendors = [...new Set(products.map(p => p.vendor_name).filter(Boolean))];
 
   if (loading) {
     return (
@@ -291,17 +289,7 @@ const CropCare = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="All Vendors" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Vendors</SelectItem>
-                        {uniqueVendors.map(vendor => (
-                          <SelectItem key={vendor} value={vendor}>{vendor}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+
                     <Button
                       variant={viewMode === 'grid' ? 'default' : 'outline'}
                       size="sm"
@@ -528,11 +516,9 @@ const CropCare = () => {
                            <SelectValue placeholder="Select category" />
                          </SelectTrigger>
                          <SelectContent>
-                           <SelectItem value="Seeds">Seeds</SelectItem>
-                           <SelectItem value="Agro Chemicals">Agro Chemicals</SelectItem>
-                           <SelectItem value="Crop Protection">Crop Protection</SelectItem>
-                           <SelectItem value="Equipment">Equipment</SelectItem>
-                           <SelectItem value="Other Products">Other Products</SelectItem>
+                           {categories.map(category => (
+                             <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                           ))}
                          </SelectContent>
                        </Select>
                      </div>
