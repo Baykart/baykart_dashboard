@@ -39,7 +39,7 @@ import { LoadingSpinner } from '@/components/ui/loading';
 
 const CropCare = () => {
   const [products, setProducts] = useState<CropCareProduct[]>([]);
-  const [categories, setCategories] = useState<CropCareCategory[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,15 +79,6 @@ const CropCare = () => {
       { id: "other_products", name: "Other Products" },
     ];
     setCategories(hardcodedCategories);
-    // Use hardcoded categories like the Crops module
-    const hardcodedCategories = [
-      { id: 'seeds', name: 'Seeds' },
-      { id: 'agro_chemicals', name: 'Agro Chemicals' },
-      { id: 'crop_protection', name: 'Crop Protection' },
-      { id: 'equipment', name: 'Equipment' },
-      { id: 'other_products', name: 'Other Products' },
-    ];
-    setCategories(hardcodedCategories);
   };
 
   const fetchProducts = async () => {
@@ -108,7 +99,6 @@ const CropCare = () => {
     e.preventDefault();
     try {
       // Use category ID directly since we use hardcoded categories
-      // Use category ID directly
       
       const productData = {
         ...formData,
