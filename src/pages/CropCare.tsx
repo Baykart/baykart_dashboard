@@ -70,12 +70,24 @@ const CropCare = () => {
   }, []);
 
   const fetchCategories = async () => {
-    try {
-      const response = await cropcareService.getCategories();
-      setCategories(response.results);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-    }
+    // Use hardcoded categories like the Crops module
+    const hardcodedCategories = [
+      { id: "seeds", name: "Seeds" },
+      { id: "agro_chemicals", name: "Agro Chemicals" },
+      { id: "crop_protection", name: "Crop Protection" },
+      { id: "equipment", name: "Equipment" },
+      { id: "other_products", name: "Other Products" },
+    ];
+    setCategories(hardcodedCategories);
+    // Use hardcoded categories like the Crops module
+    const hardcodedCategories = [
+      { id: 'seeds', name: 'Seeds' },
+      { id: 'agro_chemicals', name: 'Agro Chemicals' },
+      { id: 'crop_protection', name: 'Crop Protection' },
+      { id: 'equipment', name: 'Equipment' },
+      { id: 'other_products', name: 'Other Products' },
+    ];
+    setCategories(hardcodedCategories);
   };
 
   const fetchProducts = async () => {
@@ -95,13 +107,13 @@ const CropCare = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Map category name to category ID for backend
-      const selectedCategory = categories.find(cat => cat.name === formData.category);
+      // Use category ID directly since we use hardcoded categories
+      // Use category ID directly
       
       const productData = {
         ...formData,
         stock_quantity: parseInt(formData.stock_quantity.toString()),
-        category: selectedCategory?.id || null,
+        category: formData.category,
         brand: formData.brand, // Keep as string for business name
         vendor: null, // Will be set when vendors are available
       };
@@ -523,44 +535,40 @@ const CropCare = () => {
                        </Select>
                      </div>
                                                <div>
-                             <Label htmlFor="brand">Business Name</Label>
+                             <Label htmlFor="brand">Business Name (Optional)</Label>
                              <Input
                                id="brand"
                                value={formData.brand}
                                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                                placeholder="Enter your business name"
-                               required
                              />
                            </div>
                            <div>
-                             <Label htmlFor="vendor_phone">Contact Phone</Label>
+                             <Label htmlFor="vendor_phone">Contact Phone (Optional)</Label>
                              <Input
                                id="vendor_phone"
                                value={formData.vendor_phone}
                                onChange={(e) => setFormData({ ...formData, vendor_phone: e.target.value })}
                                placeholder="Enter contact phone number"
-                               required
                              />
                            </div>
                            <div>
-                             <Label htmlFor="vendor_email">Contact Email</Label>
+                             <Label htmlFor="vendor_email">Contact Email (Optional)</Label>
                              <Input
                                id="vendor_email"
                                type="email"
                                value={formData.vendor_email}
                                onChange={(e) => setFormData({ ...formData, vendor_email: e.target.value })}
                                placeholder="Enter contact email"
-                               required
                              />
                            </div>
                            <div>
-                             <Label htmlFor="vendor_address">Location/Address</Label>
+                             <Label htmlFor="vendor_address">Location/Address (Optional)</Label>
                              <Input
                                id="vendor_address"
                                value={formData.vendor_address}
                                onChange={(e) => setFormData({ ...formData, vendor_address: e.target.value })}
                                placeholder="Enter your location or address"
-                               required
                              />
                            </div>
                   </div>
