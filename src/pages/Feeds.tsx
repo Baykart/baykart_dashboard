@@ -31,7 +31,9 @@ import {
   Edit,
   Copy,
   Mail,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 const FEED_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
@@ -139,6 +141,51 @@ export default function Feeds() {
     });
     if (res.ok) fetchPosts(1, true);
     else if (res.status === 401) setError('You must be logged in to delete posts.');
+  }
+
+  async function handleAdminHide(postId: number) {
+    const res = await fetch(`${FEED_API}${postId}/hide/`, {
+      method: 'POST',
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+    if (res.ok) {
+      fetchPosts(1, true);
+      toast({ title: 'Post hidden successfully! 👁️' });
+    } else if (res.status === 401) {
+      setError('You must be logged in as admin to hide posts.');
+    } else {
+      toast({ title: 'Failed to hide post', variant: 'destructive' });
+    }
+  }
+
+  async function handleAdminUnhide(postId: number) {
+    const res = await fetch(`${FEED_API}${postId}/unhide/`, {
+      method: 'POST',
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+    if (res.ok) {
+      fetchPosts(1, true);
+      toast({ title: 'Post unhidden successfully! 👁️' });
+    } else if (res.status === 401) {
+      setError('You must be logged in as admin to unhide posts.');
+    } else {
+      toast({ title: 'Failed to unhide post', variant: 'destructive' });
+    }
+  }
+
+  async function handleAdminDelete(postId: number) {
+    const res = await fetch(`${FEED_API}${postId}/admin_delete/`, {
+      method: 'POST',
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+    if (res.ok) {
+      fetchPosts(1, true);
+      toast({ title: 'Post deleted by admin! 🗑️' });
+    } else if (res.status === 401) {
+      setError('You must be logged in as admin to delete posts.');
+    } else {
+      toast({ title: 'Failed to delete post', variant: 'destructive' });
+    }
   }
 
   async function handleAddComment(postId: number) {
@@ -410,6 +457,11 @@ export default function Feeds() {
                                 Admin
                               </Badge>
                             )}
+                            {post.is_hidden && (
+                              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-700">
+                                Hidden
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center space-x-2 text-sm text-gray-500">
                             <Calendar className="h-3 w-3" />
@@ -430,6 +482,26 @@ export default function Feeds() {
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete Post
                               </DropdownMenuItem>
+                            )}
+                            {/* Admin options */}
+                            {user?.email === 'admin@admin.com' && (
+                              <>
+                                {post.is_hidden ? (
+                                  <DropdownMenuItem onClick={() => handleAdminUnhide(post.id)}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Unhide Post
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={() => handleAdminHide(post.id)}>
+                                    <EyeOff className="h-4 w-4 mr-2" />
+                                    Hide Post
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={() => handleAdminDelete(post.id)}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete (Admin)
+                                </DropdownMenuItem>
+                              </>
                             )}
                             <DropdownMenuItem onClick={() => setReporting({ postId: post.id, reason: 'spam', description: '' })}>
                               <Flag className="h-4 w-4 mr-2" />
