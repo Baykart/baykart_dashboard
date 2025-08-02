@@ -10,12 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { farmingService, FarmingCrop } from '@/lib/farmingService';
+import { farmingService, FarmingCrop, FarmingCropCategory } from '@/lib/farmingService';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { Plus, Edit, Trash2, Search, Filter, Grid3X3, List, Star, Package, Calendar } from 'lucide-react';
 
 const Crops = () => {
   const [crops, setCrops] = useState<FarmingCrop[]>([]);
+  const [categories, setCategories] = useState<FarmingCropCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,8 +38,12 @@ const Crops = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const cropsResponse = await farmingService.getCrops();
+      const [cropsResponse, categoriesResponse] = await Promise.all([
+        farmingService.getCrops(),
+        farmingService.getCropCategories()
+      ]);
       setCrops(cropsResponse.results);
+      setCategories(categoriesResponse.results);
       setError(null);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -214,13 +219,11 @@ const Crops = () => {
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="grains">Grains</SelectItem>
-                            <SelectItem value="vegetables">Vegetables</SelectItem>
-                            <SelectItem value="fruits">Fruits</SelectItem>
-                            <SelectItem value="legumes">Legumes</SelectItem>
-                            <SelectItem value="tubers">Tubers</SelectItem>
-                            <SelectItem value="cash_crops">Cash Crops</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
