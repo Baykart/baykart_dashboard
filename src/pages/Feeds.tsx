@@ -34,7 +34,8 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
-  Search
+  Search,
+  AlertTriangle
 } from 'lucide-react';
 
 const FEED_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
@@ -56,6 +57,7 @@ export default function Feeds() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPosts, setFilteredPosts] = useState<FeedPost[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [editingComment, setEditingComment] = useState<{ commentId: number; text: string } | null>(null);
 
   useEffect(() => {
     if (accessToken) {
@@ -204,6 +206,48 @@ export default function Feeds() {
       setError('You must be logged in as admin to delete posts.');
     } else {
       toast({ title: 'Failed to delete post', variant: 'destructive' });
+    }
+  }
+
+  async function handleEditComment(commentId: number, text: string) {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comments/${commentId}/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ text }),
+    });
+    
+    if (res.ok) {
+      fetchPosts(1, true);
+      setEditingComment(null);
+      toast({ title: 'Comment updated successfully! ✏️' });
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        setError('You must be logged in to edit comments.');
+      } else {
+        toast({ title: 'Failed to update comment', description: errorData.detail || 'Unknown error', variant: 'destructive' });
+      }
+    }
+  }
+
+  async function handleDeleteComment(commentId: number) {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comments/${commentId}/`, {
+      method: 'DELETE',
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+    
+    if (res.ok) {
+      fetchPosts(1, true);
+      toast({ title: 'Comment deleted successfully! 🗑️' });
+    } else {
+      if (res.status === 401) {
+        setError('You must be logged in to delete comments.');
+      } else {
+        toast({ title: 'Failed to delete comment', variant: 'destructive' });
+      }
     }
   }
 
@@ -691,11 +735,64 @@ export default function Feeds() {
                             </Avatar>
                             <div className="flex-1">
                               <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center space-x-2 mb-1">
-                                  <span className="font-medium text-sm text-gray-900">{comment.user}</span>
-                                  <span className="text-xs text-gray-500">{formatTimeAgo(comment.created_at)}</span>
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-medium text-sm text-gray-900">{comment.user}</span>
+                                    <span className="text-xs text-gray-500">{formatTimeAgo(comment.created_at)}</span>
+                                  </div>
+                                  {/* Comment actions for comment owner */}
+                                  {user?.email === comment.user && (
+                                    <div className="flex items-center space-x-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setEditingComment({ commentId: comment.id, text: comment.text })}
+                                        className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteComment(comment.id)}
+                                        className="h-6 w-6 p-0 text-gray-500 hover:text-red-600"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
-                                <p className="text-sm text-gray-700">{comment.text}</p>
+                                
+                                {/* Edit comment input */}
+                                {editingComment?.commentId === comment.id ? (
+                                  <div className="space-y-2">
+                                    <Input
+                                      value={editingComment.text}
+                                      onChange={(e) => setEditingComment(prev => prev ? { ...prev, text: e.target.value } : null)}
+                                      className="text-sm"
+                                    />
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleEditComment(comment.id, editingComment.text)}
+                                        disabled={!editingComment.text.trim()}
+                                        className="bg-green-600 hover:bg-green-700 text-xs"
+                                      >
+                                        Save
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setEditingComment(null)}
+                                        className="text-xs"
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-700">{comment.text}</p>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -732,6 +829,65 @@ export default function Feeds() {
             </div>
           </div>
         </div>
+
+        {/* Report Dialog */}
+        {reporting && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex items-center space-x-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-red-500" />
+                <h3 className="text-lg font-semibold text-gray-900">Report Post</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for reporting
+                  </label>
+                  <select
+                    value={reporting.reason}
+                    onChange={(e) => setReporting(prev => prev ? { ...prev, reason: e.target.value as FeedReportReason } : null)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="spam">Spam</option>
+                    <option value="abuse">Abusive Content</option>
+                    <option value="misinfo">Misinformation</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional details (optional)
+                  </label>
+                  <textarea
+                    value={reporting.description}
+                    onChange={(e) => setReporting(prev => prev ? { ...prev, description: e.target.value } : null)}
+                    placeholder="Please provide more details about why you're reporting this post..."
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setReporting(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleReport(reporting.postId, reporting.reason, reporting.description)}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  Report Post
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
