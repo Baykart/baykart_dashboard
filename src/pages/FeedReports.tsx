@@ -15,7 +15,9 @@ import { supabase } from '@/lib/supabase';
 import { ChevronDown, ChevronRight, Eye, CheckCircle, Trash2, UserX, Filter, Search } from 'lucide-react';
 
 const REPORTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/reports/`;
+const COMMENT_REPORTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comment-reports/`;
 const POSTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
+const COMMENTS_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comments/`;
 const ME_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/auth/users/me/`;
 
 interface ReportFilters {
@@ -29,12 +31,15 @@ interface ReportFilters {
 export default function FeedReports() {
   const { user } = useUser();
   const [reports, setReports] = useState<FeedReport[]>([]);
+  const [commentReports, setCommentReports] = useState<any[]>([]);
   const [posts, setPosts] = useState<{ [id: number]: FeedPost }>({});
+  const [comments, setComments] = useState<{ [id: number]: any }>({});
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [expandedReports, setExpandedReports] = useState<Set<number>>(new Set());
+  const [reportType, setReportType] = useState<'posts' | 'comments'>('posts');
   const [filters, setFilters] = useState<ReportFilters>({
     status: 'all',
     reason: 'all',
@@ -90,7 +95,8 @@ export default function FeedReports() {
       is_liked: false,
       created_at: '2025-01-27T10:00:00Z',
       updated_at: '2025-01-27T10:00:00Z',
-      is_deleted: false
+      is_deleted: false,
+      is_hidden: false
     },
     2: {
       id: 2,
@@ -140,9 +146,8 @@ export default function FeedReports() {
           const adminStatus = !!me.is_staff || !!me.is_superuser;
           setIsAdmin(adminStatus);
           console.log('isAdmin:', adminStatus);
-          if (adminStatus) {
-            fetchReports(token);
-          }
+          // Allow any authenticated user to view reports
+          fetchReports(token);
         } else {
           console.error('Failed to fetch user profile:', meRes.status, meRes.statusText);
         }
@@ -158,19 +163,30 @@ export default function FeedReports() {
   async function fetchReports(token: string) {
     setLoading(true);
     try {
-      const res = await fetch(REPORTS_API, {
+      // Fetch post reports
+      const postReportsRes = await fetch(REPORTS_API, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        console.error('Failed to fetch reports:', res.status, res.statusText);
-        toast({ title: 'Error loading reports', variant: 'destructive' });
-        return;
+      if (postReportsRes.ok) {
+        const postReportsData = await postReportsRes.json();
+        setReports(postReportsData.results || postReportsData);
+        // Fetch posts for each report
+        for (const report of postReportsData.results || postReportsData) {
+          if (!posts[report.post]) fetchPost(report.post, token);
+        }
       }
-      const data = await res.json();
-      setReports(data.results || data);
-      // Fetch posts for each report
-      for (const report of data.results || data) {
-        if (!posts[report.post]) fetchPost(report.post, token);
+
+      // Fetch comment reports
+      const commentReportsRes = await fetch(COMMENT_REPORTS_API, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (commentReportsRes.ok) {
+        const commentReportsData = await commentReportsRes.json();
+        setCommentReports(commentReportsData.results || commentReportsData);
+        // Fetch comments for each report
+        for (const report of commentReportsData.results || commentReportsData) {
+          if (!comments[report.comment]) fetchComment(report.comment, token);
+        }
       }
     } catch (e) {
       console.error('Error fetching reports:', e);
@@ -193,6 +209,22 @@ export default function FeedReports() {
       }
     } catch (e) {
       console.error('Error fetching post:', e);
+    }
+  }
+
+  async function fetchComment(commentId: number, token: string) {
+    try {
+      const res = await fetch(`${COMMENTS_API}${commentId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const comment = await res.json();
+        setComments((prev) => ({ ...prev, [commentId]: comment }));
+      } else {
+        console.error('Failed to fetch comment:', res.status, res.statusText);
+      }
+    } catch (e) {
+      console.error('Error fetching comment:', e);
     }
   }
 
@@ -301,50 +333,7 @@ export default function FeedReports() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center max-w-md mx-auto p-6">
-              <div className="mb-4">
-                <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Demo Mode</h1>
-                <p className="text-gray-600 mb-4">
-                  Admin authentication is not configured. Showing demo data for testing purposes.
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Current User:</strong> {user?.email || 'Not logged in'}
-                  </p>
-                  <p className="text-sm text-blue-800 mt-1">
-                    <strong>Admin Status:</strong> {isAdmin ? 'Yes' : 'No'}
-                  </p>
-                  <p className="text-sm text-blue-800 mt-1">
-                    <strong>Mode:</strong> Demo (showing sample data)
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Button onClick={() => setShowDemo(true)} className="bg-green-600 hover:bg-green-700">
-                  View Demo Reports
-                </Button>
-                <Button onClick={() => window.history.back()} variant="outline">
-                  Go Back
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Remove admin-only restriction - allow any authenticated user to view reports
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -354,12 +343,27 @@ export default function FeedReports() {
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="container mx-auto px-6 py-8">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold">
-                Feed Reports
-                {!isAdmin && <Badge variant="secondary" className="ml-2">Demo Mode</Badge>}
-              </h1>
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold">Feed Reports</h1>
+                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                  <Button
+                    variant={reportType === 'posts' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setReportType('posts')}
+                  >
+                    Post Reports ({reports.length})
+                  </Button>
+                  <Button
+                    variant={reportType === 'comments' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setReportType('comments')}
+                  >
+                    Comment Reports ({commentReports.length})
+                  </Button>
+                </div>
+              </div>
               <div className="text-sm text-gray-500">
-                {filteredReports.length} of {reportsToShow.length} reports
+                {reportType === 'posts' ? filteredReports.length : commentReports.length} reports
                 {!isAdmin && <span className="ml-2 text-yellow-600">(Demo Data)</span>}
               </div>
             </div>
