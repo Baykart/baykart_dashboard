@@ -50,7 +50,7 @@ export default function Feeds() {
   const [newPostText, setNewPostText] = useState('');
   const [newPostImages, setNewPostImages] = useState<File[]>([]);
   const [commentText, setCommentText] = useState<{ [postId: number]: string }>({});
-  const [reporting, setReporting] = useState<{ postId: number; reason: FeedReportReason; description: string } | null>(null);
+  const [reporting, setReporting] = useState<{ postId: number; reason: FeedReportReason; description: string; type?: 'post' | 'comment' } | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCommentInput, setShowCommentInput] = useState<{ [postId: number]: boolean }>({});
@@ -288,6 +288,7 @@ export default function Feeds() {
 
   async function handleReport(postId: number, reason: FeedReportReason, description: string) {
     console.log('Reporting post:', { postId, reason, description });
+    console.log('Access token:', accessToken ? 'Present' : 'Missing');
     
     const res = await fetch(`${FEED_API}${postId}/report/`, {
       method: 'POST',
@@ -312,6 +313,37 @@ export default function Feeds() {
         setError('You must be logged in to report posts.');
       } else {
         toast({ title: 'Failed to report post', description: errorData.detail || 'Unknown error', variant: 'destructive' });
+      }
+    }
+  }
+
+  async function handleReportComment(commentId: number, reason: FeedReportReason, description: string) {
+    console.log('Reporting comment:', { commentId, reason, description });
+    console.log('Access token:', accessToken ? 'Present' : 'Missing');
+    
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/comments/${commentId}/report/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ reason, description }),
+    });
+    
+    console.log('Comment report response status:', res.status);
+    
+    if (res.ok) {
+      const data = await res.json();
+      console.log('Comment report submitted successfully:', data);
+      setReporting(null);
+      toast({ title: 'Comment reported successfully' });
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Comment report error:', errorData);
+      if (res.status === 401) {
+        setError('You must be logged in to report comments.');
+      } else {
+        toast({ title: 'Failed to report comment', description: errorData.detail || 'Unknown error', variant: 'destructive' });
       }
     }
   }
@@ -740,27 +772,39 @@ export default function Feeds() {
                                     <span className="font-medium text-sm text-gray-900">{comment.user}</span>
                                     <span className="text-xs text-gray-500">{formatTimeAgo(comment.created_at)}</span>
                                   </div>
-                                  {/* Comment actions for comment owner */}
-                                  {user?.email === comment.user && (
-                                    <div className="flex items-center space-x-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setEditingComment({ commentId: comment.id, text: comment.text })}
-                                        className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600"
-                                      >
-                                        <Edit className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeleteComment(comment.id)}
-                                        className="h-6 w-6 p-0 text-gray-500 hover:text-red-600"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  )}
+                                  {/* Comment actions */}
+                                  <div className="flex items-center space-x-1">
+                                    {/* Comment owner actions */}
+                                    {user?.email === comment.user && (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setEditingComment({ commentId: comment.id, text: comment.text })}
+                                          className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600"
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteComment(comment.id)}
+                                          className="h-6 w-6 p-0 text-gray-500 hover:text-red-600"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </>
+                                    )}
+                                    {/* Report button for all users */}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setReporting({ postId: comment.id, reason: 'spam', description: '', type: 'comment' })}
+                                      className="h-6 w-6 p-0 text-gray-500 hover:text-red-600"
+                                    >
+                                      <Flag className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                                 
                                 {/* Edit comment input */}
@@ -836,7 +880,9 @@ export default function Feeds() {
             <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
               <div className="flex items-center space-x-3 mb-4">
                 <AlertTriangle className="h-6 w-6 text-red-500" />
-                <h3 className="text-lg font-semibold text-gray-900">Report Post</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Report {reporting.type === 'comment' ? 'Comment' : 'Post'}
+                </h3>
               </div>
               
               <div className="space-y-4">
@@ -879,10 +925,16 @@ export default function Feeds() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => handleReport(reporting.postId, reporting.reason, reporting.description)}
+                  onClick={() => {
+                    if (reporting.type === 'comment') {
+                      handleReportComment(reporting.postId, reporting.reason, reporting.description);
+                    } else {
+                      handleReport(reporting.postId, reporting.reason, reporting.description);
+                    }
+                  }}
                   className="flex-1 bg-red-600 hover:bg-red-700"
                 >
-                  Report Post
+                  Report {reporting.type === 'comment' ? 'Comment' : 'Post'}
                 </Button>
               </div>
             </div>
