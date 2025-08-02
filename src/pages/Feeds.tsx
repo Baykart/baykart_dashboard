@@ -33,7 +33,8 @@ import {
   Mail,
   ExternalLink,
   Eye,
-  EyeOff
+  EyeOff,
+  Search
 } from 'lucide-react';
 
 const FEED_API = `${import.meta.env.VITE_API_URL || 'https://web-production-f9f0.up.railway.app'}/api/v1/feeds/posts/`;
@@ -52,6 +53,9 @@ export default function Feeds() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCommentInput, setShowCommentInput] = useState<{ [postId: number]: boolean }>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPosts, setFilteredPosts] = useState<FeedPost[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (accessToken) {
@@ -59,6 +63,21 @@ export default function Feeds() {
     }
     // eslint-disable-next-line
   }, [accessToken]);
+
+  // Filter posts based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredPosts(posts);
+      setIsSearching(false);
+    } else {
+      const filtered = posts.filter(post => 
+        post.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.text.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredPosts(filtered);
+      setIsSearching(true);
+    }
+  }, [posts, searchQuery]);
 
   useEffect(() => {
     // Get access token on mount and when user changes
@@ -359,6 +378,36 @@ export default function Feeds() {
         
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl mx-auto space-y-6">
+            {/* Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search posts by user or text..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4"
+                  />
+                </div>
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+              {isSearching && (
+                <div className="mt-2 text-sm text-gray-500">
+                  Found {filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''} matching "{searchQuery}"
+                </div>
+              )}
+            </div>
+
             {/* Create Post Card */}
             <Card className="shadow-sm border-0 bg-white">
               <CardContent className="p-6">
@@ -438,7 +487,7 @@ export default function Feeds() {
 
             {/* Feed Posts */}
             <div className="space-y-4">
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <Card key={post.id} className="shadow-sm border-0 bg-white hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -664,13 +713,20 @@ export default function Feeds() {
                 </div>
               )}
               
-              {!loading && posts.length === 0 && !error && (
+              {!loading && filteredPosts.length === 0 && !error && (
                 <div className="text-center py-12">
                   <div className="text-gray-400 mb-4">
                     <MessageCircle className="h-12 w-12 mx-auto" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
-                  <p className="text-gray-500">Be the first to share your farming experience!</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {isSearching ? 'No posts found' : 'No posts yet'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {isSearching 
+                      ? `No posts match your search for "${searchQuery}"`
+                      : 'Be the first to share your farming experience!'
+                    }
+                  </p>
                 </div>
               )}
             </div>
