@@ -22,16 +22,11 @@ import {
   MessageCircle, 
   Share2, 
   MoreHorizontal, 
-  MapPin, 
   Image as ImageIcon,
-  Video,
   Calendar,
-  ThumbsUp,
   Flag,
   Send,
   Camera,
-  Video as VideoIcon,
-  MapPin as LocationIcon,
   Trash2,
   Edit,
   Copy,
@@ -228,7 +223,9 @@ export default function Feeds() {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setNewPostImages(prev => [...prev, ...files]);
+    // Only accept image files
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    setNewPostImages(prev => [...prev, ...imageFiles]);
   };
 
   const handleShare = async (post: any) => {
@@ -372,19 +369,6 @@ export default function Feeds() {
                         className="hidden"
                       />
                     </label>
-                    <label className="flex items-center space-x-2 text-gray-600 hover:text-green-600 cursor-pointer">
-                      <VideoIcon className="h-5 w-5" />
-                      <span className="text-sm">Video</span>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        className="hidden"
-                      />
-                    </label>
-                    <div className="flex items-center space-x-2 text-gray-600 hover:text-green-600 cursor-pointer">
-                      <LocationIcon className="h-5 w-5" />
-                      <span className="text-sm">Location</span>
-                    </div>
                   </div>
                   <Button
                     onClick={handleCreatePost}
@@ -433,27 +417,27 @@ export default function Feeds() {
                           </div>
                         </div>
                       </div>
-                                                <div className="flex items-center space-x-1">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {user?.email === post.user && (
-                                  <DropdownMenuItem onClick={() => handleDelete(post.id)}>
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete Post
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem onClick={() => setReporting({ postId: post.id, reason: 'spam', description: '' })}>
-                                  <Flag className="h-4 w-4 mr-2" />
-                                  Report Post
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                      <div className="flex items-center space-x-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {user?.email === post.user && (
+                              <DropdownMenuItem onClick={() => handleDelete(post.id)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Post
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => setReporting({ postId: post.id, reason: 'spam', description: '' })}>
+                              <Flag className="h-4 w-4 mr-2" />
+                              Report Post
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </CardHeader>
                   
