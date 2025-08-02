@@ -105,8 +105,9 @@ const MarketPrices = () => {
     try {
       const priceData = {
         ...formData,
-        price: parseFloat(formData.price),
-        previous_price: formData.previous_price ? parseFloat(formData.previous_price) : undefined,
+        // Send as strings to match backend expectations
+        price: formData.price,
+        previous_price: formData.previous_price || undefined,
       };
       await marketPricesService.addMarketPrice(priceData);
       toast.success("Market price added successfully");
@@ -150,8 +151,9 @@ const MarketPrices = () => {
     try {
       const priceData = {
         ...editFormData,
-        price: parseFloat(editFormData.price),
-        previous_price: editFormData.previous_price ? parseFloat(editFormData.previous_price) : undefined,
+        // Send as strings to match backend expectations
+        price: editFormData.price,
+        previous_price: editFormData.previous_price || undefined,
       };
       await marketPricesService.updateMarketPrice(editingPrice.id, priceData);
       toast.success("Market price updated successfully");

@@ -15,15 +15,15 @@ export interface MarketPrice {
   location: string;
   district?: string;
   village?: string;
-  price: number;
+  price: string; // Backend returns as string
   currency: string;
   price_unit: string;
-  previous_price?: number;
+  previous_price?: string; // Backend returns as string
   market_type: string;
   season: string;
   trend: 'up' | 'down' | 'stable';
-  price_change?: number;
-  price_change_percentage?: number;
+  price_change?: string; // Backend returns as string
+  price_change_percentage?: string; // Backend returns as string
   source?: string;
   is_verified: boolean;
   verified_by?: string;
