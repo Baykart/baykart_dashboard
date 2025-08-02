@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/`;
 
 export interface AgriService {
@@ -74,11 +76,20 @@ export const getAgriService = async (id: number): Promise<AgriService> => {
 // Add a new agri service
 export const addAgriService = async (serviceData: Partial<AgriService>): Promise<AgriService> => {
   try {
+    // Get authentication headers
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(`${API_BASE}agriservices/services/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(serviceData),
     });
     if (!response.ok) {
@@ -94,11 +105,20 @@ export const addAgriService = async (serviceData: Partial<AgriService>): Promise
 // Update an agri service
 export const updateAgriService = async (id: number, serviceData: Partial<AgriService>): Promise<AgriService> => {
   try {
+    // Get authentication headers
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(`${API_BASE}agriservices/services/${id}/`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(serviceData),
     });
     if (!response.ok) {
@@ -114,8 +134,18 @@ export const updateAgriService = async (id: number, serviceData: Partial<AgriSer
 // Delete an agri service
 export const deleteAgriService = async (id: number): Promise<void> => {
   try {
+    // Get authentication headers
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const headers: Record<string, string> = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(`${API_BASE}agriservices/services/${id}/`, {
       method: 'DELETE',
+      headers,
     });
     if (!response.ok) {
       throw new Error('Failed to delete agri service');
