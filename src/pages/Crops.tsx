@@ -95,10 +95,16 @@ const Crops = () => {
     setEditingCrop(crop);
     setFormData({
       name: crop.name,
-      category: crop.category,
+      category: crop.category, // This is now the category ID
       icon_url: crop.icon_url || '',
     });
     setIsDialogOpen(true);
+  };
+
+  // Helper function to get category name by ID
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'Unknown Category';
   };
 
   const handleDelete = async (id: string) => {
@@ -275,13 +281,11 @@ const Crops = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="grains">Grains</SelectItem>
-                      <SelectItem value="vegetables">Vegetables</SelectItem>
-                      <SelectItem value="fruits">Fruits</SelectItem>
-                      <SelectItem value="legumes">Legumes</SelectItem>
-                      <SelectItem value="tubers">Tubers</SelectItem>
-                      <SelectItem value="cash_crops">Cash Crops</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Button
@@ -322,7 +326,7 @@ const Crops = () => {
                         <div className="flex-1">
                           <CardTitle className="text-lg">{crop.name}</CardTitle>
                           <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">{crop.category_display}</Badge>
+                            <Badge variant="outline">{getCategoryName(crop.category)}</Badge>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -356,7 +360,7 @@ const Crops = () => {
                       
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-lg font-semibold text-green-600">{crop.category_display}</span>
+                          <span className="text-lg font-semibold text-green-600">{getCategoryName(crop.category)}</span>
                         </div>
                         
                         <div className="text-xs text-gray-500">

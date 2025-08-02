@@ -15,7 +15,8 @@ export interface FarmingCrop {
   id: string;
   name: string;
   category: string;
-  category_display: string;
+  category_name: string;
+  category_description: string | null;
   icon_url: string | null;
   created_at: string;
 }
