@@ -61,7 +61,7 @@ export default function Feeds() {
 
   useEffect(() => {
     if (accessToken) {
-      fetchPosts(1, true);
+    fetchPosts(1, true);
     }
     // eslint-disable-next-line
   }, [accessToken]);
@@ -495,10 +495,10 @@ export default function Feeds() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <Textarea
+              <Textarea
                       placeholder="What's on your mind? Share your farming experience..."
-                      value={newPostText}
-                      onChange={(e) => setNewPostText(e.target.value)}
+                value={newPostText}
+                onChange={(e) => setNewPostText(e.target.value)}
                       className="min-h-[100px] border-0 resize-none focus:ring-0 text-gray-700 placeholder-gray-400"
                     />
                   </div>
@@ -534,9 +534,9 @@ export default function Feeds() {
                       <Camera className="h-5 w-5" />
                       <span className="text-sm">Photo</span>
                       <input
-                        type="file"
+                type="file"
                         accept="image/*"
-                        multiple
+                multiple
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -558,7 +558,7 @@ export default function Feeds() {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-600">{error}</p>
-              </div>
+            </div>
             )}
 
             {/* Feed Posts */}
@@ -566,7 +566,7 @@ export default function Feeds() {
               {filteredPosts.map((post) => (
                 <Card key={post.id} className="shadow-sm border-0 bg-white hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src="" />
@@ -663,7 +663,7 @@ export default function Feeds() {
                         <span>{post.likes_count} likes</span>
                         <span>{post.comments?.length || 0} comments</span>
                       </div>
-                    </div>
+                  </div>
                     
                     {/* Action Buttons */}
                     <div className="flex items-center justify-between pt-4 border-t">
@@ -714,7 +714,7 @@ export default function Feeds() {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
+                  </div>
                       
                       <Button
                         variant="ghost"
@@ -723,7 +723,7 @@ export default function Feeds() {
                         className="text-gray-600 hover:text-red-600"
                       >
                         <Flag className="h-4 w-4" />
-                      </Button>
+                    </Button>
                     </div>
                     
                     {/* Comment Input */}
@@ -750,15 +750,15 @@ export default function Feeds() {
                             className="bg-green-600 hover:bg-green-700"
                           >
                             <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
+                    </Button>
+                  </div>
                       </div>
                     )}
                     
                     {/* Comments Display */}
                     {post.comments && post.comments.length > 0 && (
                       <div className="mt-4 pt-4 border-t space-y-3">
-                        {post.comments.map((comment) => (
+                    {post.comments.map((comment) => (
                           <div key={comment.id} className="flex space-x-3">
                             <Avatar className="h-6 w-6">
                               <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
@@ -810,7 +810,7 @@ export default function Feeds() {
                                 {/* Edit comment input */}
                                 {editingComment?.commentId === comment.id ? (
                                   <div className="space-y-2">
-                                    <Input
+                      <Input
                                       value={editingComment.text}
                                       onChange={(e) => setEditingComment(prev => prev ? { ...prev, text: e.target.value } : null)}
                                       className="text-sm"
@@ -851,7 +851,7 @@ export default function Feeds() {
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                   <p className="text-gray-500 mt-2">Loading posts...</p>
-                </div>
+                    </div>
               )}
               
               {!loading && filteredPosts.length === 0 && !error && (
@@ -875,7 +875,7 @@ export default function Feeds() {
         </div>
 
         {/* Report Dialog */}
-        {reporting && (
+            {reporting && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
               <div className="flex items-center space-x-3 mb-4">
@@ -936,8 +936,8 @@ export default function Feeds() {
                 >
                   Report {reporting.type === 'comment' ? 'Comment' : 'Post'}
                 </Button>
-              </div>
-            </div>
+      </div>
+    </div>
           </div>
         )}
       </div>

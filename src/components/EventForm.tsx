@@ -459,15 +459,34 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
               </div>
               <div className="relative mt-1">
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  id="start_time"
-                  name="start_time"
-                  type="time"
+                <Select
                   value={formData.start_time}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  className={cn("pl-10", errors.start_time && touchedFields.start_time && "border-destructive")}
-                />
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, start_time: value }));
+                    if (touchedFields.start_time) {
+                      setErrors(prev => ({ ...prev, start_time: validateField('start_time', value) }));
+                    }
+                  }}
+                >
+                  <SelectTrigger className={cn("pl-10", errors.start_time && touchedFields.start_time && "border-destructive")}>
+                    <SelectValue placeholder="Select start time" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {Array.from({ length: 96 }, (_, i) => {
+                      const hour = Math.floor(i / 4);
+                      const minute = (i % 4) * 15;
+                      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+                      return (
+                        <SelectItem key={timeString} value={timeString}>
+                          {displayTime}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -480,15 +499,34 @@ const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
               </div>
               <div className="relative mt-1">
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  id="end_time"
-                  name="end_time"
-                  type="time"
+                <Select
                   value={formData.end_time}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  className={cn("pl-10", errors.end_time && touchedFields.end_time && "border-destructive")}
-                />
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, end_time: value }));
+                    if (touchedFields.end_time) {
+                      setErrors(prev => ({ ...prev, end_time: validateField('end_time', value) }));
+                    }
+                  }}
+                >
+                  <SelectTrigger className={cn("pl-10", errors.end_time && touchedFields.end_time && "border-destructive")}>
+                    <SelectValue placeholder="Select end time" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {Array.from({ length: 96 }, (_, i) => {
+                      const hour = Math.floor(i / 4);
+                      const minute = (i % 4) * 15;
+                      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+                      return (
+                        <SelectItem key={timeString} value={timeString}>
+                          {displayTime}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
