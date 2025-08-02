@@ -93,7 +93,7 @@ export default function Farmers() {
     try {
       const farmerData = {
         first_name: formData.first_name,
-        last_name: formData.last_name, // Use the form data
+        last_name: formData.last_name,
         phone_number: formData.phone_number,
         region: formData.region,
         district: formData.region, // Use region as district for simplicity
@@ -104,10 +104,8 @@ export default function Farmers() {
         farm_size: null, // Default value
         primary_crops: [], // Default value
         profile_picture: profilePictureUrl, // Add profile picture URL
-        user_data: {
-          email: formData.email,
-          password: formData.password
-        }
+        email: formData.email,
+        password: formData.password
       };
       await farmersService.createFarmer(farmerData);
       toast.success('Farmer created successfully');

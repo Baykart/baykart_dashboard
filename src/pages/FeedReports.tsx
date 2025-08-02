@@ -170,7 +170,7 @@ export default function FeedReports() {
       if (postReportsRes.ok) {
         const postReportsData = await postReportsRes.json();
         setReports(postReportsData.results || postReportsData);
-        // Fetch posts for each report
+      // Fetch posts for each report
         for (const report of postReportsData.results || postReportsData) {
           if (!posts[report.post]) fetchPost(report.post, token);
         }

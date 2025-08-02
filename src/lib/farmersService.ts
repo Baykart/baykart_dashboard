@@ -27,6 +27,9 @@ export interface Farmer {
   age: number | null;
   created_at: string;
   updated_at: string;
+  // For creating new users
+  email?: string;
+  password?: string;
 }
 
 export interface FarmerCrop {
