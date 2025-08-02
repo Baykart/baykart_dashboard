@@ -29,7 +29,7 @@ export default function Farmers() {
   // Form data for new farmer
   const [formData, setFormData] = useState({
     first_name: '',
-    age: 0,
+    last_name: '', // Add required last_name field
     phone_number: '',
     email: '',
     password: '',
@@ -93,7 +93,7 @@ export default function Farmers() {
     try {
       const farmerData = {
         first_name: formData.first_name,
-        last_name: '', // Set empty for simplified form
+        last_name: formData.last_name, // Use the form data
         phone_number: formData.phone_number,
         region: formData.region,
         district: formData.region, // Use region as district for simplicity
@@ -114,7 +114,7 @@ export default function Farmers() {
       setIsDialogOpen(false);
       setFormData({
         first_name: '',
-        age: 0,
+        last_name: '',
         phone_number: '',
         email: '',
         password: '',
@@ -283,28 +283,30 @@ export default function Farmers() {
                       <p className="text-sm text-gray-600">Tap to add profile picture</p>
                     </div>
 
-                    <div>
-                      <Label htmlFor="first_name">Name *</Label>
-                      <Input
-                        id="first_name"
-                        value={formData.first_name}
-                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                        placeholder="Enter your name"
-                        required
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="first_name">First Name *</Label>
+                        <Input
+                          id="first_name"
+                          value={formData.first_name}
+                          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                          placeholder="Enter your first name"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="last_name">Last Name *</Label>
+                        <Input
+                          id="last_name"
+                          value={formData.last_name}
+                          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                          placeholder="Enter your last name"
+                          required
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <Label htmlFor="age">Age *</Label>
-                      <Input
-                        id="age"
-                        type="number"
-                        value={formData.age || ''}
-                        onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 0 })}
-                        placeholder="Enter your age"
-                        required
-                      />
-                    </div>
+
 
                     <div>
                       <Label htmlFor="phone_number">Phone Number *</Label>
