@@ -130,10 +130,18 @@ export const addMarketPrice = async (marketPrice: Partial<MarketPrice>): Promise
       },
       body: JSON.stringify(marketPrice),
     });
+    
+    console.log('Market price creation response:', response.status, response.statusText);
+    
     if (!response.ok) {
-      throw new Error('Failed to add market price');
+      const errorText = await response.text();
+      console.error('Market price creation error:', errorText);
+      throw new Error(`Failed to add market price: ${response.status} ${response.statusText}`);
     }
-    return await response.json();
+    
+    const result = await response.json();
+    console.log('Market price created successfully:', result);
+    return result;
   } catch (error) {
     console.error('Error adding market price:', error);
     throw error;

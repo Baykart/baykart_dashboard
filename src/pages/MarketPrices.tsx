@@ -109,7 +109,12 @@ const MarketPrices = () => {
         price: formData.price,
         previous_price: formData.previous_price || undefined,
       };
-      await marketPricesService.addMarketPrice(priceData);
+      
+      console.log('Submitting market price data:', priceData);
+      
+      const result = await marketPricesService.addMarketPrice(priceData);
+      console.log('Market price creation result:', result);
+      
       toast.success("Market price added successfully");
       setIsDialogOpen(false);
       setFormData({
@@ -120,7 +125,7 @@ const MarketPrices = () => {
       fetchData();
     } catch (error) {
       console.error("Error adding market price:", error);
-      toast.error("Failed to add market price");
+      toast.error(`Failed to add market price: ${error.message}`);
     }
   };
 
