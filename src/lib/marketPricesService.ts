@@ -1,4 +1,13 @@
+import { supabase } from './supabase';
+
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/`;
+
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+  return { Authorization: `Bearer ${token}` };
+}
 
 export interface MarketPrice {
   id: string;
@@ -112,12 +121,12 @@ export const getMarketPrice = async (id: string): Promise<MarketPriceDetail> => 
 // Add new market price
 export const addMarketPrice = async (marketPrice: Partial<MarketPrice>): Promise<MarketPrice> => {
   try {
-    const token = localStorage.getItem('supabase.auth.token');
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE}farming/market-prices/`, {
       method: 'POST',
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(marketPrice),
     });
@@ -134,12 +143,12 @@ export const addMarketPrice = async (marketPrice: Partial<MarketPrice>): Promise
 // Update market price
 export const updateMarketPrice = async (id: string, marketPrice: Partial<MarketPrice>): Promise<MarketPrice> => {
   try {
-    const token = localStorage.getItem('supabase.auth.token');
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE}farming/market-prices/${id}/`, {
       method: 'PUT',
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(marketPrice),
     });
@@ -156,12 +165,10 @@ export const updateMarketPrice = async (id: string, marketPrice: Partial<MarketP
 // Delete market price
 export const deleteMarketPrice = async (id: string): Promise<void> => {
   try {
-    const token = localStorage.getItem('supabase.auth.token');
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE}farming/market-prices/${id}/`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: headers,
     });
     if (!response.ok) {
       throw new Error('Failed to delete market price');
