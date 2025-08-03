@@ -569,12 +569,12 @@ const Marketplace = () => {
                           <Camera className="w-4 h-4" />
                         </label>
                         <input 
-                          id="main_image" 
+                          id="main_image" name="main_image" 
+                          name="main_image"
                           type="file" 
                           accept="image/*" 
                           onChange={handleMainImageChange} 
                           className="hidden" 
-                          required
                         />
                       </div>
                       <div>
@@ -597,7 +597,8 @@ const Marketplace = () => {
                         <span className="text-sm">Add more images</span>
                       </label>
                       <input 
-                        id="additional_images" 
+                        id="additional_images" name="additional_images" 
+                        name="additional_images"
                         type="file" 
                         accept="image/*" 
                         multiple 
@@ -635,7 +636,7 @@ const Marketplace = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Enter product name"
-                      required
+                     
                     />
                   </div>
                   <div>
@@ -647,7 +648,7 @@ const Marketplace = () => {
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       placeholder="Enter price in Dalasi"
-                      required
+                     
                     />
                   </div>
                 </div>
@@ -658,7 +659,7 @@ const Marketplace = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Enter product description"
-                    required
+                   
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -705,7 +706,7 @@ const Marketplace = () => {
                       value={formData.quantity_available}
                       onChange={(e) => setFormData({ ...formData, quantity_available: parseInt(e.target.value) || 1 })}
                       placeholder="Enter quantity"
-                      required
+                     
                     />
                   </div>
                   <div>
@@ -793,7 +794,7 @@ const Marketplace = () => {
                           <Camera className="w-4 h-4" />
                         </label>
                         <input 
-                          id="edit_main_image" 
+                          id="edit_main_image" name="edit_main_image" 
                           type="file" 
                           accept="image/*" 
                           onChange={handleEditMainImageChange} 
@@ -820,7 +821,7 @@ const Marketplace = () => {
                         <span className="text-sm">Add more images</span>
                       </label>
                       <input 
-                        id="edit_additional_images" 
+                        id="edit_additional_images" name="edit_additional_images" 
                         type="file" 
                         accept="image/*" 
                         multiple 
@@ -857,7 +858,7 @@ const Marketplace = () => {
                       id="edit_name"
                       value={editFormData.name}
                       onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                      required
+                     
                     />
                   </div>
                   <div>
@@ -868,7 +869,7 @@ const Marketplace = () => {
                       step="0.01"
                       value={editFormData.price}
                       onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}
-                      required
+                     
                     />
                   </div>
                 </div>
@@ -878,7 +879,7 @@ const Marketplace = () => {
                     id="edit_description"
                     value={editFormData.description}
                     onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                    required
+                   
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -924,7 +925,7 @@ const Marketplace = () => {
                       type="number"
                       value={editFormData.quantity_available}
                       onChange={(e) => setEditFormData({ ...editFormData, quantity_available: parseInt(e.target.value) || 1 })}
-                      required
+                     
                     />
                   </div>
                   <div>

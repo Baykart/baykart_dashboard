@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/`;
 
 export interface MarketplaceProduct {
@@ -55,10 +57,27 @@ export async function getMarketplaceCategories() {
   return res.json();
 }
 
+import { supabase } from './supabase';
+
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
 export async function addMarketplaceProduct(data: any) {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_BASE}marketplace/products/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to add product");
@@ -66,9 +85,10 @@ export async function addMarketplaceProduct(data: any) {
 }
 
 export async function updateMarketplaceProduct(id: string, data: any) {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_BASE}marketplace/products/${id}/`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to update product");
@@ -76,8 +96,11 @@ export async function updateMarketplaceProduct(id: string, data: any) {
 }
 
 export async function deleteMarketplaceProduct(id: string) {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_BASE}marketplace/products/${id}/`, {
-    method: "DELETE" });
+    method: "DELETE",
+    headers
+  });
   if (!res.ok) throw new Error("Failed to delete product");
   return true;
 }
