@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -551,6 +551,9 @@ const Marketplace = () => {
             <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Product</DialogTitle>
+                <DialogDescription>
+                  Add a new product to the marketplace. Fill in all required fields and upload images.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Main Image Upload */}
@@ -569,7 +572,7 @@ const Marketplace = () => {
                           <Camera className="w-4 h-4" />
                         </label>
                         <input 
-                          id="main_image" name="main_image" 
+                          id="main_image" 
                           name="main_image"
                           type="file" 
                           accept="image/*" 
@@ -597,7 +600,7 @@ const Marketplace = () => {
                         <span className="text-sm">Add more images</span>
                       </label>
                       <input 
-                        id="additional_images" name="additional_images" 
+                        id="additional_images" 
                         name="additional_images"
                         type="file" 
                         accept="image/*" 
