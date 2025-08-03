@@ -165,12 +165,20 @@ const Marketplace = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Find the category UUID by name
+      const selectedCategory = categories.find(cat => cat.name === formData.category);
+      if (!selectedCategory) {
+        toast.error("Please select a valid category");
+        return;
+      }
+
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
+        price: formData.price.toString(), // Send as string for DecimalField
+        category: selectedCategory.id, // Send UUID instead of name
         quantity_available: parseInt(formData.quantity_available.toString()),
-        main_image: mainImageUrl,
-        additional_images: additionalImageUrls,
+        main_image: mainImageUrl || null,
+        additional_images: additionalImageUrls || [],
       };
       await marketplaceService.addMarketplaceProduct(productData);
       toast.success("Product added successfully");
@@ -213,12 +221,20 @@ const Marketplace = () => {
     if (!editingProduct) return;
     
     try {
+      // Find the category UUID by name
+      const selectedCategory = categories.find(cat => cat.name === editFormData.category);
+      if (!selectedCategory) {
+        toast.error("Please select a valid category");
+        return;
+      }
+
       const productData = {
         ...editFormData,
-        price: parseFloat(editFormData.price),
+        price: editFormData.price.toString(), // Send as string for DecimalField
+        category: selectedCategory.id, // Send UUID instead of name
         quantity_available: parseInt(editFormData.quantity_available.toString()),
-        main_image: editMainImageUrl,
-        additional_images: editAdditionalImageUrls,
+        main_image: editMainImageUrl || null,
+        additional_images: editAdditionalImageUrls || [],
       };
       await marketplaceService.updateMarketplaceProduct(editingProduct.id, productData);
       toast.success("Product updated successfully");
