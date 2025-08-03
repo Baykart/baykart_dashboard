@@ -44,6 +44,7 @@ const productSchema = z.object({
   sowing_method: z.string().optional(),
   maturity_days: z.coerce.number().optional(),
   status: z.enum(["available", "sold_out", "archived"]).default("available"),
+  images: z.any().optional(),
 });
 
 interface ProductFormProps {
@@ -79,6 +80,7 @@ export const ProductForm = ({
       sowing_method: product?.sowing_method || "",
       maturity_days: product?.maturity_days || undefined,
       status: product?.status || "available",
+      images: [],
     },
   });
 
@@ -111,7 +113,8 @@ export const ProductForm = ({
         sowing_season: "",
         sowing_method: "",
         maturity_days: undefined,
-        status: "available"
+        status: "available",
+        images: []
       });
       setImages([]);
       setPreviewUrls([]);
@@ -333,16 +336,25 @@ export const ProductForm = ({
               />
             </div>
 
-            <div>
-              <FormLabel>Product Images</FormLabel>
-              <ImageUpload
-                onImagesSelected={handleFileChange}
-                previewUrls={previewUrls}
-              />
-              <FormDescription>
-                Upload up to 5 images of your product. The first image will be used as the main image.
-              </FormDescription>
-            </div>
+            <FormField
+              control={form.control}
+              name="images"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Images</FormLabel>
+                  <FormControl>
+                    <ImageUpload
+                      onImagesSelected={handleFileChange}
+                      previewUrls={previewUrls}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Upload up to 5 images of your product. The first image will be used as the main image.
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>

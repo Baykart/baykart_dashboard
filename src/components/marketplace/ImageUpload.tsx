@@ -63,6 +63,7 @@ export const ImageUpload = ({
       <input
         type="file"
         ref={fileInputRef}
+        name="images"
         accept="image/*"
         multiple
         onChange={handleFileChange}
